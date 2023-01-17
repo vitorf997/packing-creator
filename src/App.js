@@ -1,13 +1,21 @@
-import logo from "./logo.svg";
+import React, { useState } from "react";
 import "./App.css";
-import Sidebar from "./SideBar/Sidebar";
+import Sidebar from "./Components/SideBar/Sidebar";
+import Content from "./Components/Content/Content";
+
+const DUMMY_DATA_SIZE_MATRIX = ["XS", "S", "M", "L", "XL"];
 
 function App() {
+  const [selectedItem, setSelectedItem] = useState();
+  const selectItemHandler = (itemNumber) => {
+    setSelectedItem(itemNumber);
+  };
+
   return (
     <div style={{ display: "flex" }}>
-      <Sidebar />
+      <Sidebar onSelectItem={selectItemHandler} />
       <div style={{ width: "100%" }}>
-        <h1>Main Content</h1>
+        <Content data={DUMMY_DATA_SIZE_MATRIX} selectedItem={selectedItem} />
       </div>
     </div>
   );
