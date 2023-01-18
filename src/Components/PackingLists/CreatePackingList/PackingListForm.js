@@ -15,7 +15,7 @@ const PackingListForm = (props) => {
         formElements[i].value !== "" &&
         formElements[i].id.includes("box_from_input_")
       ) {
-        console.log("in");
+        console.log("inn");
       }
     }
   };
