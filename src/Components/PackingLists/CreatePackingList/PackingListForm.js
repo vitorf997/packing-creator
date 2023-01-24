@@ -35,6 +35,57 @@ const PackingListForm = (props) => {
     setDataFromInputs(updatedBoxFromPerSize);
   };
 
+  const isInputValid = (eventId, eventValue, prefix, obj) => {
+    //TODO Se numero está entre outros que está a ser utilizado
+    //TODO Se número é positivo
+    //TODO Se numero "até" é maior que número "de"
+    //TODO Se quantidade de restos estiver preenchida sem a caixa de restos estar numerada
+
+    //console.log("evenId: " + prefix);
+
+    const isValid =
+      prefix + obj.size === eventId &&
+      eventValue.trim().length !== 0 &&
+      +eventValue > 0;
+
+    if (prefix === "box_from_input_") {
+      if (isBetween(+eventValue)) {
+        console.log("isBetween");
+        return false;
+      } else if (isValid) {
+        return true;
+      }
+    } else if (prefix === "box_to_input_") {
+      if (isBetween(+eventValue)) {
+        console.log("isBetween");
+        return false;
+      } else if (isValid) {
+        return true;
+      }
+    } else if (prefix === "units_per_box_input_") {
+      if (isValid) {
+        return true;
+      }
+    } else if (prefix === "remain_box_input_") {
+      if (isBetween(+eventValue)) {
+        console.log("isBetween");
+        return false;
+      } else if (isValid) {
+        return true;
+      }
+    } else if (prefix === "remain_units_input_") {
+      if (isValid) {
+        return true;
+      }
+    }
+  };
+
+  const isBetween = (value) => {
+    return totalPerSize.some((obj) => {
+      return value !== 0 && value >= obj.boxFrom && value <= obj.boxTo;
+    });
+  };
+
   const boxFromChangeHandler = (event) => {
     inputChangeHandler(event, "box_from_input_", "boxFrom");
   };
@@ -55,16 +106,7 @@ const PackingListForm = (props) => {
     inputChangeHandler(event, "remain_units_input_", "remainUnits");
   };
 
-  const isInputValid = (eventId, eventValue, prefix, obj) => {
-    return (
-      prefix + obj.size === eventId &&
-      eventValue.trim().length !== 0 &&
-      +eventValue > 0
-    );
-  };
-
   const setDataFromInputs = (sizeObjects) => {
-    console.log(sizeObjects);
     let total = 0;
     const updatedObjects = sizeObjects.map((obj) => {
       total =
