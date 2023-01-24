@@ -4,24 +4,80 @@ import styles from "./PackingListForm.module.css";
 import PackingDataGeneration from "./PackingDataGeneration";
 
 const PackingListForm = (props) => {
-  const [totalPerSize, setTotalPerSize] = useState(0);
+  const sizeObj = props.data.map((obj) => ({
+    size: obj,
+    boxFrom: 0,
+    boxTo: 0,
+    unitsPerBox: 0,
+    remainBox: 0,
+    remainUnits: 0,
+    totalPerSize: 0,
+  }));
+
+  const [totalPerSize, setTotalPerSize] = useState(sizeObj);
+  const [totalUnits, setTotalUnits] = useState(0);
 
   const submitFormHandler = (event) => {
     event.preventDefault();
-    const formElements = event.target.elements;
-    for (let i = 0; i < formElements.length; i++) {
-      if (
-        formElements[i].tagName === "INPUT" &&
-        formElements[i].value !== "" &&
-        formElements[i].id.includes("box_from_input_")
-      ) {
-        console.log("in");
-      }
-    }
   };
 
-  const qtyChangeHandler = (event) => {
-    setTotalPerSize(event.target.value);
+  const inputChangeHandler = (event, prefix, property) => {
+    const updatedBoxFromPerSize = totalPerSize.map((obj) => {
+      if (isInputValid(event.target.id, event.target.value, prefix, obj)) {
+        return {
+          ...obj,
+          [property]: +event.target.value,
+        };
+      } else {
+        return { ...obj, totalPerSize: 0 };
+      }
+    });
+    setDataFromInputs(updatedBoxFromPerSize);
+  };
+
+  const boxFromChangeHandler = (event) => {
+    inputChangeHandler(event, "box_from_input_", "boxFrom");
+  };
+
+  const boxToChangeHandler = (event) => {
+    inputChangeHandler(event, "box_to_input_", "boxTo");
+  };
+
+  const qtyPerBoxChangeHandler = (event) => {
+    inputChangeHandler(event, "units_per_box_input_", "unitsPerBox");
+  };
+
+  const remainBoxChangeHandler = (event) => {
+    inputChangeHandler(event, "remain_box_input_", "remainBox");
+  };
+
+  const remainQtyChangeHandler = (event) => {
+    inputChangeHandler(event, "remain_units_input_", "remainUnits");
+  };
+
+  const isInputValid = (eventId, eventValue, prefix, obj) => {
+    return (
+      prefix + obj.size === eventId &&
+      eventValue.trim().length !== 0 &&
+      +eventValue > 0
+    );
+  };
+
+  const setDataFromInputs = (sizeObjects) => {
+    console.log(sizeObjects);
+    let total = 0;
+    const updatedObjects = sizeObjects.map((obj) => {
+      total =
+        total +
+        ((obj.boxTo - obj.boxFrom + 1) * obj.unitsPerBox + obj.remainUnits);
+      return {
+        ...obj,
+        totalPerSize:
+          (obj.boxTo - obj.boxFrom + 1) * obj.unitsPerBox + obj.remainUnits,
+      };
+    });
+    setTotalUnits(total);
+    setTotalPerSize(updatedObjects);
   };
 
   return (
@@ -44,54 +100,72 @@ const PackingListForm = (props) => {
               </tr>
             </thead>
             <tbody>
-              {props.data.map((size) => (
-                <tr key={"tr_" + size}>
+              {totalPerSize.map((size) => (
+                <tr key={"tr_" + size.size}>
                   <td>
-                    <label id={"size_" + size} key={"size_" + size}>
-                      {size}
+                    <label id={"size_" + size.size} key={"size_" + size.size}>
+                      {size.size}
                     </label>
                   </td>
                   <td>
                     <input
-                      onChange={qtyChangeHandler}
-                      id={"box_from_input_" + size}
-                      key={"box_from_input_" + size}
+                      type="number"
+                      min="0"
+                      onBlur={boxFromChangeHandler}
+                      id={"box_from_input_" + size.size}
+                      key={"box_from_input_" + size.size}
                     />
                   </td>
                   <td>
                     <input
-                      id={"box_to_input_" + size}
-                      key={"box_to_input_" + size}
+                      type="number"
+                      min="0"
+                      onBlur={boxToChangeHandler}
+                      id={"box_to_input_" + size.size}
+                      key={"box_to_input_" + size.size}
                     />
                   </td>
                   <td>
                     <input
-                      id={"units_p_box_input_" + size}
-                      key={"units_p_box_input_" + size}
+                      type="number"
+                      min="0"
+                      onBlur={qtyPerBoxChangeHandler}
+                      id={"units_per_box_input_" + size.size}
+                      key={"units_per_box_input_" + size.size}
                     />
                   </td>
                   <td>
                     <input
-                      id={"remain_box_input_" + size}
-                      key={"remain_box_input_" + size}
+                      type="number"
+                      min="0"
+                      onBlur={remainBoxChangeHandler}
+                      id={"remain_box_input_" + size.size}
+                      key={"remain_box_input_" + size.size}
                     />
                   </td>
                   <td>
                     <input
-                      id={"units_remain_input_" + size}
-                      key={"units_remain_input_" + size}
+                      type="number"
+                      min="0"
+                      onBlur={remainQtyChangeHandler}
+                      id={"remain_units_input_" + size.size}
+                      key={"remain_units_input_" + size.size}
                     />
                   </td>
                   <td>
                     <label
-                      id={"total_units_label_" + size}
-                      key={"total_units_label_" + size}
+                      id={"total_units_label_" + size.size}
+                      key={"total_units_label_" + size.size}
                     >
-                      {totalPerSize}
+                      {size.totalPerSize}
                     </label>
                   </td>
                 </tr>
               ))}
+              <tr>
+                <td colSpan={6}>Total</td>
+                <td>{totalUnits}</td>
+              </tr>
             </tbody>
           </Table>
         </Card>

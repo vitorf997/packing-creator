@@ -3,7 +3,7 @@ import "./App.css";
 import Sidebar from "./Components/SideBar/Sidebar";
 import Content from "./Components/Content/Content";
 
-const DUMMY_DATA_SIZE_MATRIX = ["XS", "S", "M", "L", "XL", "XXL"];
+const DUMMY_DATA_SIZE_MATRIX = ["XS", "S", "M", "L", "XL"];
 
 function App() {
   const [selectedItem, setSelectedItem] = useState();
