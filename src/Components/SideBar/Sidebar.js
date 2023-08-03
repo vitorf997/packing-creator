@@ -7,7 +7,7 @@ const Sidebar = (props) => {
   };
   return (
     <div className={classes.sidebar}>
-      <h1>Sidebar</h1>
+      <h1>Barra LATERAL</h1>
       <ul>
         <li id={"i0"} onClick={clickHandler}>
           Create Packing List
