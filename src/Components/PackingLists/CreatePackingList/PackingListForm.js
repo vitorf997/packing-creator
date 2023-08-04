@@ -41,7 +41,6 @@ const PackingListForm = (props) => {
     //TODO Se numero "até" é maior que número "de"
     //TODO Se quantidade de restos estiver preenchida sem a caixa de restos estar numerada
 
-    //console.log("evenId: " + prefix);
 
     const isValid =
       prefix + obj.size === eventId &&
@@ -120,6 +119,7 @@ const PackingListForm = (props) => {
     });
     setTotalUnits(total);
     setTotalPerSize(updatedObjects);
+    console.log("OBJ: ", updatedObjects);
   };
 
   return (
