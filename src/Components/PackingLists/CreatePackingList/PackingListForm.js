@@ -39,7 +39,7 @@ const PackingListForm = (props) => {
     //TODO Se numero está entre outros que está a ser utilizado
     //TODO Se número é positivo
     //TODO Se numero "até" é maior que número "de"
-    //TODO Se quantidade de restos estiver preenchida sem a caixa de restos estar numerada
+    //TODO Se quantidade de restos estiver preenchida sem a caixa de restos estar numeradas
 
 
     const isValid =
