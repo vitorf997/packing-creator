@@ -38,7 +38,7 @@ const PackingListForm = (props) => {
   const isInputValid = (eventId, eventValue, prefix, obj) => {
     //TODO Se numero está entre outros que está a ser utilizado
     //TODO Se número é positivo
-    //TODO Se numero "até" é maior que número "de"
+    //TODO Se numero "até" é maior que número "de" aa
     //TODO Se quantidade de restos estiver preenchida sem a caixa de restos estar numeradas
 
 
