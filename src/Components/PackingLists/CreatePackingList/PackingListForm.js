@@ -1,43 +1,62 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button, Table, Form, Card } from "react-bootstrap";
 import styles from "./PackingListForm.module.css";
 import PackingDataGeneration from "./PackingDataGeneration";
 
 const PackingListForm = (props) => {
-  const sizeObj = props.data.map((obj) => ({
-    size: obj,
-    boxFrom: 0,
-    boxTo: 0,
-    unitsPerBox: 0,
-    remainBox: 0,
-    remainUnits: 0,
-    totalPerSize: 0,
-  }));
+  const sizeObj = useMemo(
+    () =>
+      props.data.map((obj) => ({
+        size: obj,
+        boxFrom: 0,
+        boxTo: 0,
+        unitsPerBox: 0,
+        remainBox: 0,
+        remainUnits: 0,
+        totalPerSize: 0,
+      })),
+    [props.data]
+  );
 
   const [totalPerSize, setTotalPerSize] = useState(sizeObj);
   const [totalUnits, setTotalUnits] = useState(0);
+
+  useEffect(() => {
+    setTotalPerSize(sizeObj);
+    setTotalUnits(0);
+  }, [sizeObj]);
 
   const submitFormHandler = (event) => {
     event.preventDefault();
   };
 
   const inputChangeHandler = (event, prefix, property) => {
+    const { id, value } = event.target;
     const updatedBoxFromPerSize = totalPerSize.map((obj) => {
-      if (isInputValid(event.target.id, event.target.value, prefix, obj)) {
-        return {
-          ...obj,
-          [property]: +event.target.value,
-        };
-      } else {
-        return { ...obj, totalPerSize: 0 };
+      if (prefix + obj.size !== id) return obj;
+      if (!isInputValid(id, value, prefix, obj)) {
+        return { ...obj, [property]: 0, totalPerSize: 0 };
       }
+      return {
+        ...obj,
+        [property]: +value,
+      };
     });
     setDataFromInputs(updatedBoxFromPerSize);
   };
 
   const isInputValid = (eventId, eventValue, prefix, obj) => {
-    //TODO Se numero está entre outros que está a ser utilizado
-    //TODO Se número é positivo
+    const numericValue = +eventValue;
+    const checksUsedBoxNumber =
+      prefix === "box_from_input_" ||
+      prefix === "box_to_input_" ||
+      prefix === "remain_box_input_";
+    if (checksUsedBoxNumber && isBetween(numericValue, obj.size)) {
+      return false;
+    }
+    if (eventValue.trim().length === 0 || numericValue <= 0) {
+      return false;
+    }
     //TODO Se numero "até" é maior que número "de" aa
     //TODO Se quantidade de restos estiver preenchida sem a caixa de restos estar numeradas
 
@@ -45,20 +64,14 @@ const PackingListForm = (props) => {
     const isValid =
       prefix + obj.size === eventId &&
       eventValue.trim().length !== 0 &&
-      +eventValue > 0;
+      numericValue > 0;
 
     if (prefix === "box_from_input_") {
-      if (isBetween(+eventValue)) {
-        console.log("isBetween");
-        return false;
-      } else if (isValid) {
+      if (isValid) {
         return true;
       }
     } else if (prefix === "box_to_input_") {
-      if (isBetween(+eventValue)) {
-        console.log("isBetween");
-        return false;
-      } else if (isValid) {
+      if (isValid) {
         return true;
       }
     } else if (prefix === "units_per_box_input_") {
@@ -66,10 +79,7 @@ const PackingListForm = (props) => {
         return true;
       }
     } else if (prefix === "remain_box_input_") {
-      if (isBetween(+eventValue)) {
-        console.log("isBetween");
-        return false;
-      } else if (isValid) {
+      if (isValid) {
         return true;
       }
     } else if (prefix === "remain_units_input_") {
@@ -77,11 +87,18 @@ const PackingListForm = (props) => {
         return true;
       }
     }
+
+    return false;
   };
 
-  const isBetween = (value) => {
+  const isBetween = (value, currentSize) => {
     return totalPerSize.some((obj) => {
-      return value !== 0 && value >= obj.boxFrom && value <= obj.boxTo;
+      return (
+        obj.size !== currentSize &&
+        value !== 0 &&
+        value >= obj.boxFrom &&
+        value <= obj.boxTo
+      );
     });
   };
 
@@ -220,3 +237,6 @@ const PackingListForm = (props) => {
 };
 
 export default PackingListForm;
+
+
+
