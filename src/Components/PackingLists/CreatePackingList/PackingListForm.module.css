@@ -12,3 +12,8 @@
 .form-control Button{
     padding: 10px;
 }
+
+.invalidInput{
+    border: 2px solid #b00020;
+    box-shadow: 0 0 0 2px rgba(176, 0, 32, 0.15);
+}

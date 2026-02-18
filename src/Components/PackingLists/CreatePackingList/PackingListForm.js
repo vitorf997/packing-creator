@@ -32,74 +32,82 @@ const PackingListForm = (props) => {
 
   const inputChangeHandler = (event, prefix, property) => {
     const { id, value } = event.target;
+    const numValue = parseNumber(value);
     const updatedBoxFromPerSize = totalPerSize.map((obj) => {
       if (prefix + obj.size !== id) return obj;
-      if (!isInputValid(id, value, prefix, obj)) {
-        return { ...obj, [property]: 0, totalPerSize: 0 };
+      const candidate = { ...obj, [property]: numValue };
+      if (!isInputValid(prefix, candidate)) {
+        return { ...candidate, totalPerSize: 0 };
       }
-      return {
-        ...obj,
-        [property]: +value,
-      };
+      return candidate;
     });
     setDataFromInputs(updatedBoxFromPerSize);
   };
 
-  const isInputValid = (eventId, eventValue, prefix, obj) => {
-    const numericValue = +eventValue;
-    const checksUsedBoxNumber =
-      prefix === "box_from_input_" ||
-      prefix === "box_to_input_" ||
-      prefix === "remain_box_input_";
-    if (checksUsedBoxNumber && isBetween(numericValue, obj.size)) {
-      return false;
+  const parseNumber = (value) => {
+    const trimmed = value.trim();
+    if (trimmed === "") return 0;
+    const parsed = Number(trimmed);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  };
+
+  const isValidRange = (obj) => {
+    return obj.boxFrom > 0 && obj.boxTo > 0 && obj.boxTo >= obj.boxFrom;
+  };
+
+  const rangesOverlap = (aFrom, aTo, bFrom, bTo) => {
+    return aFrom <= bTo && bFrom <= aTo;
+  };
+
+  const isRangeOverlapping = (candidate, allRows = totalPerSize) => {
+    if (!isValidRange(candidate)) return false;
+    return allRows.some((obj) => {
+      if (obj.size === candidate.size || !isValidRange(obj)) return false;
+      return rangesOverlap(
+        candidate.boxFrom,
+        candidate.boxTo,
+        obj.boxFrom,
+        obj.boxTo
+      );
+    });
+  };
+
+  const isBoxNumberInUse = (value, candidate, allRows = totalPerSize) => {
+    if (value <= 0) return false;
+    if (isValidRange(candidate)) {
+      if (value >= candidate.boxFrom && value <= candidate.boxTo) return true;
     }
-    if (eventValue.trim().length === 0 || numericValue <= 0) {
-      return false;
-    }
-    //TODO Se numero "até" é maior que número "de" aa
-    //TODO Se quantidade de restos estiver preenchida sem a caixa de restos estar numeradas
+    return allRows.some((obj) => {
+      if (obj.size === candidate.size || !isValidRange(obj)) return false;
+      return value >= obj.boxFrom && value <= obj.boxTo;
+    });
+  };
 
-
-    const isValid =
-      prefix + obj.size === eventId &&
-      eventValue.trim().length !== 0 &&
-      numericValue > 0;
-
+  const isInputValid = (prefix, obj) => {
     if (prefix === "box_from_input_") {
-      if (isValid) {
-        return true;
-      }
+      if (obj.boxFrom <= 0) return true;
+      if (obj.boxTo > 0 && obj.boxTo < obj.boxFrom) return false;
+      if (isRangeOverlapping(obj)) return false;
+      return true;
     } else if (prefix === "box_to_input_") {
-      if (isValid) {
-        return true;
-      }
+      if (obj.boxTo <= 0) return true;
+      if (obj.boxFrom > 0 && obj.boxTo < obj.boxFrom) return false;
+      if (isRangeOverlapping(obj)) return false;
+      return true;
     } else if (prefix === "units_per_box_input_") {
-      if (isValid) {
-        return true;
-      }
+      return true;
     } else if (prefix === "remain_box_input_") {
-      if (isValid) {
-        return true;
-      }
+      if (obj.remainBox <= 0) return true;
+      if (isBoxNumberInUse(obj.remainBox, obj)) return false;
+      return true;
     } else if (prefix === "remain_units_input_") {
-      if (isValid) {
-        return true;
-      }
+      if (obj.remainUnits <= 0) return true;
+      if (obj.remainBox <= 0) return false;
+      if (isBoxNumberInUse(obj.remainBox, obj)) return false;
+      return true;
     }
 
     return false;
-  };
-
-  const isBetween = (value, currentSize) => {
-    return totalPerSize.some((obj) => {
-      return (
-        obj.size !== currentSize &&
-        value !== 0 &&
-        value >= obj.boxFrom &&
-        value <= obj.boxTo
-      );
-    });
   };
 
   const boxFromChangeHandler = (event) => {
@@ -122,17 +130,35 @@ const PackingListForm = (props) => {
     inputChangeHandler(event, "remain_units_input_", "remainUnits");
   };
 
+  const isRowValid = (obj, allRows) => {
+    if (obj.boxFrom < 0 || obj.boxTo < 0 || obj.unitsPerBox < 0) return false;
+    if (obj.remainBox < 0 || obj.remainUnits < 0) return false;
+    if (obj.boxFrom > 0 || obj.boxTo > 0) {
+      if ((obj.boxFrom > 0) !== (obj.boxTo > 0)) return true;
+      if (!isValidRange(obj)) return false;
+      if (isRangeOverlapping(obj, allRows)) return false;
+    }
+    if (obj.remainUnits > 0 && obj.remainBox <= 0) return false;
+    if (obj.remainBox > 0 && isBoxNumberInUse(obj.remainBox, obj, allRows)) {
+      return false;
+    }
+    return true;
+  };
+
   const setDataFromInputs = (sizeObjects) => {
     let total = 0;
     const updatedObjects = sizeObjects.map((obj) => {
-      total =
-        total +
-        ((obj.boxTo - obj.boxFrom + 1) * obj.unitsPerBox + obj.remainUnits);
-      return {
-        ...obj,
-        totalPerSize:
-          (obj.boxTo - obj.boxFrom + 1) * obj.unitsPerBox + obj.remainUnits,
-      };
+      const rowValid = isRowValid(obj, sizeObjects);
+      if (!rowValid) {
+        return { ...obj, totalPerSize: 0 };
+      }
+      if (!isValidRange(obj) || obj.unitsPerBox <= 0) {
+        return { ...obj, totalPerSize: 0 };
+      }
+      const rowTotal =
+        (obj.boxTo - obj.boxFrom + 1) * obj.unitsPerBox + obj.remainUnits;
+      total += rowTotal;
+      return { ...obj, totalPerSize: rowTotal };
     });
     setTotalUnits(total);
     setTotalPerSize(updatedObjects);
@@ -159,7 +185,10 @@ const PackingListForm = (props) => {
               </tr>
             </thead>
             <tbody>
-              {totalPerSize.map((size) => (
+              {totalPerSize.map((size) => {
+                const rowValid = isRowValid(size, totalPerSize);
+                const inputClass = rowValid ? "" : styles.invalidInput;
+                return (
                 <tr key={"tr_" + size.size}>
                   <td>
                     <label id={"size_" + size.size} key={"size_" + size.size}>
@@ -171,6 +200,7 @@ const PackingListForm = (props) => {
                       type="number"
                       min="0"
                       onBlur={boxFromChangeHandler}
+                      className={inputClass}
                       id={"box_from_input_" + size.size}
                       key={"box_from_input_" + size.size}
                     />
@@ -180,6 +210,7 @@ const PackingListForm = (props) => {
                       type="number"
                       min="0"
                       onBlur={boxToChangeHandler}
+                      className={inputClass}
                       id={"box_to_input_" + size.size}
                       key={"box_to_input_" + size.size}
                     />
@@ -189,6 +220,7 @@ const PackingListForm = (props) => {
                       type="number"
                       min="0"
                       onBlur={qtyPerBoxChangeHandler}
+                      className={inputClass}
                       id={"units_per_box_input_" + size.size}
                       key={"units_per_box_input_" + size.size}
                     />
@@ -198,6 +230,7 @@ const PackingListForm = (props) => {
                       type="number"
                       min="0"
                       onBlur={remainBoxChangeHandler}
+                      className={inputClass}
                       id={"remain_box_input_" + size.size}
                       key={"remain_box_input_" + size.size}
                     />
@@ -207,6 +240,7 @@ const PackingListForm = (props) => {
                       type="number"
                       min="0"
                       onBlur={remainQtyChangeHandler}
+                      className={inputClass}
                       id={"remain_units_input_" + size.size}
                       key={"remain_units_input_" + size.size}
                     />
@@ -220,7 +254,7 @@ const PackingListForm = (props) => {
                     </label>
                   </td>
                 </tr>
-              ))}
+              )})}
               <tr>
                 <td colSpan={6}>Total</td>
                 <td>{totalUnits}</td>
@@ -237,6 +271,7 @@ const PackingListForm = (props) => {
 };
 
 export default PackingListForm;
+
 
 
 
