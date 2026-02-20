@@ -13,7 +13,27 @@
     padding: 10px;
 }
 
+.table{
+    table-layout: fixed;
+    width: 100%;
+}
+
+.table td{
+    vertical-align: top;
+}
+
+.compactInput{
+    width: 90px;
+    padding: 4px 6px;
+}
+
 .invalidInput{
     border: 2px solid #b00020;
     box-shadow: 0 0 0 2px rgba(176, 0, 32, 0.15);
+}
+
+.errorText{
+    color: #b00020;
+    font-size: 0.75rem;
+    margin-top: 4px;
 }

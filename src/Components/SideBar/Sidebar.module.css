@@ -1,18 +1,68 @@
 .sidebar {
-    margin: 2rem auto;
-    width: 20%;
-    max-width: 40rem;
-    background: #61dafb;
+    width: 280px;
+    min-height: 100vh;
+    background: linear-gradient(180deg, #0f1a2b 0%, #0b1322 100%);
+    padding: 24px 18px;
 }
 
-.sidebar ul {
-    list-style: none;
-    padding: 1rem;
+.card {
+    border: none;
+    background: transparent;
+    color: #e9f1ff;
 }
 
-.sidebar li {
-    border: 1px solid #ccc;
-    margin: 0.5rem 0;
-    padding: 0.5rem;
-    background-color: yellow;
+.header {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 18px;
+}
+
+.title {
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 6px;
+}
+
+.subtitle {
+    color: #93a4c3;
+    font-size: 0.9rem;
+}
+
+.list {
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.list :global(.list-group-item) {
+    background: transparent;
+    color: #d7e3ff;
+    border: none;
+    padding: 14px 16px;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.list :global(.list-group-item:hover) {
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+}
+
+.list :global(.list-group-item.active) {
+    background: linear-gradient(90deg, #1f6feb 0%, #2f81f7 100%);
+    color: #ffffff;
+    border: none;
+}
+
+.section {
+    margin-top: 16px;
+}
+
+.sectionTitle {
+    color: #8da2c6;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0 0 8px 6px;
 }
