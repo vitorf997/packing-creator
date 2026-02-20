@@ -2,19 +2,16 @@ import React, { useEffect, useState } from "react";
 import { Button, Form, Table } from "react-bootstrap";
 import {
   deleteSizeMatrix,
-  fetchSizeMatrixes,
-  updateSizeMatrix
+  fetchSizeMatrixes
 } from "../../../api/sizeMatrixes";
 import ConfirmModal from "../../Common/ConfirmModal";
 import MessageModal from "../../Common/MessageModal";
 
 // Listagem de matrizes de tamanhos
-const SizesMatrixes = () => {
+const SizesMatrixes = ({ onNavigate }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [confirm, setConfirm] = useState({ show: false, id: "" });
-  const [editingId, setEditingId] = useState("");
-  const [draft, setDraft] = useState({ name: "", sizesText: "" });
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState({
     show: false,
@@ -40,12 +37,10 @@ const SizesMatrixes = () => {
       .finally(() => setLoading(false));
   };
 
-  // Carrega ao montar
   useEffect(() => {
     loadItems();
   }, []);
 
-  // Pesquisa com debounce
   useEffect(() => {
     const handle = setTimeout(() => {
       loadItems(search.trim());
@@ -54,9 +49,7 @@ const SizesMatrixes = () => {
   }, [search]);
 
   // Abre confirmação de remoção
-  const requestDelete = (id) => {
-    setConfirm({ show: true, id });
-  };
+  const requestDelete = (id) => setConfirm({ show: true, id });
 
   // Confirma remoção
   const confirmDelete = () => {
@@ -71,48 +64,6 @@ const SizesMatrixes = () => {
           show: true,
           title: "Erro",
           message: "Erro ao remover matriz."
-        });
-      });
-  };
-
-  // Inicia edição inline da matriz
-  const startEdit = (item) => {
-    setEditingId(item._id);
-    setDraft({ name: item.name || "", sizesText: item.sizes.join(",") });
-  };
-
-  // Cancela edição da matriz
-  const cancelEdit = () => {
-    setEditingId("");
-    setDraft({ name: "", sizesText: "" });
-  };
-
-  // Guarda alterações da matriz
-  const saveEdit = (item) => {
-    const sizes = draft.sizesText
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    if (!draft.name.trim() || sizes.length === 0) {
-      setModal({
-        show: true,
-        title: "Dados inválidos",
-        message: "Nome e tamanhos são obrigatórios."
-      });
-      return;
-    }
-    updateSizeMatrix(item._id, { name: draft.name, sizes })
-      .then((updated) => {
-        setItems((prev) =>
-          prev.map((row) => (row._id === updated._id ? updated : row))
-        );
-        cancelEdit();
-      })
-      .catch(() => {
-        setModal({
-          show: true,
-          title: "Erro",
-          message: "Erro ao atualizar matriz."
         });
       });
   };
@@ -150,80 +101,30 @@ const SizesMatrixes = () => {
           <tbody>
             {items.map((item) => (
               <tr key={item._id}>
-                <td style={{ minWidth: "180px" }}>
-                  {editingId === item._id ? (
-                    <Form.Group>
-                      <Form.Control
-                        value={draft.name}
-                        onChange={(e) =>
-                          setDraft((prev) => ({ ...prev, name: e.target.value }))
-                        }
-                        isInvalid={!draft.name.trim()}
-                      />
-                      <Form.Control.Feedback type="invalid">
-                        Nome obrigatório.
-                      </Form.Control.Feedback>
-                    </Form.Group>
-                  ) : (
-                    item.name
-                  )}
-                </td>
-                <td style={{ minWidth: "220px" }}>
-                  {editingId === item._id ? (
-                    <Form.Group>
-                      <Form.Control
-                        value={draft.sizesText}
-                        onChange={(e) =>
-                          setDraft((prev) => ({
-                            ...prev,
-                            sizesText: e.target.value
-                          }))
-                        }
-                        isInvalid={!draft.sizesText.trim()}
-                      />
-                      <Form.Control.Feedback type="invalid">
-                        Tamanhos obrigatórios.
-                      </Form.Control.Feedback>
-                    </Form.Group>
-                  ) : (
-                    item.sizes.join(", ")
-                  )}
-                </td>
+                <td>{item.name}</td>
+                <td>{item.sizes.join(", ")}</td>
                 <td>{new Date(item.createdAt).toLocaleString()}</td>
                 <td>
-                  {editingId === item._id ? (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="success"
-                        onClick={() => saveEdit(item)}
-                        style={{ marginRight: "8px" }}
-                      >
-                        Guardar
-                      </Button>
-                      <Button size="sm" variant="secondary" onClick={cancelEdit}>
-                        Cancelar
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="outline-primary"
-                        onClick={() => startEdit(item)}
-                        style={{ marginRight: "8px" }}
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline-danger"
-                        onClick={() => requestDelete(item._id)}
-                      >
-                        Remover
-                      </Button>
-                    </>
-                  )}
+                  <Button
+                    size="sm"
+                    variant="outline-primary"
+                    onClick={() =>
+                      onNavigate?.("size_edit", {
+                        sizeMatrixId: item._id,
+                        backKey: "size_list"
+                      })
+                    }
+                    style={{ marginRight: "8px" }}
+                  >
+                    Editar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline-danger"
+                    onClick={() => requestDelete(item._id)}
+                  >
+                    Remover
+                  </Button>
                 </td>
               </tr>
             ))}

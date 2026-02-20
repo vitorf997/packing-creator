@@ -10,7 +10,7 @@ import { normalizeClientLabelFields, normalizeLabelItems } from "../../../utils/
 // Ecrã para atualizar packing lists existentes
 const UpdatePackingList = (props) => {
   const [items, setItems] = useState([]);
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedId, setSelectedId] = useState(props.selectedId || "");
   const [selectedItem, setSelectedItem] = useState(null);
   // Estado do modal de feedback
   const [modal, setModal] = useState({
@@ -42,6 +42,10 @@ const UpdatePackingList = (props) => {
     const found = items.find((item) => item._id === selectedId);
     setSelectedItem(found || null);
   }, [items, selectedId]);
+
+  useEffect(() => {
+    if (props.selectedId) setSelectedId(props.selectedId);
+  }, [props.selectedId]);
 
   // Submete alterações da packing list
   const submitHandler = (payload) => {
@@ -78,22 +82,24 @@ const UpdatePackingList = (props) => {
   return (
     <div>
       <h3>Atualizar Packing List</h3>
-      <div style={{ marginBottom: "16px" }}>
-        <label htmlFor="packingListSelect">Selecionar packing list: </label>
-        <select
-          id="packingListSelect"
-          value={selectedId}
-          onChange={(event) => setSelectedId(event.target.value)}
-          style={{ marginLeft: "8px" }}
-        >
-          <option value="">-- selecione --</option>
-          {items.map((item) => (
-            <option key={item._id} value={item._id}>
-              {item._id} ({new Date(item.createdAt).toLocaleString()})
-            </option>
-          ))}
-        </select>
-      </div>
+      {!props.selectedId ? (
+        <div style={{ marginBottom: "16px" }}>
+          <label htmlFor="packingListSelect">Selecionar packing list: </label>
+          <select
+            id="packingListSelect"
+            value={selectedId}
+            onChange={(event) => setSelectedId(event.target.value)}
+            style={{ marginLeft: "8px" }}
+          >
+            <option value="">-- selecione --</option>
+            {items.map((item) => (
+              <option key={item._id} value={item._id}>
+                {item._id} ({new Date(item.createdAt).toLocaleString()})
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
       {selectedItem ? (
         <PackingListForm
           data={sizeMatrix}

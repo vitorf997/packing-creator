@@ -1,26 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { Button, Form, Table } from "react-bootstrap";
-import { deleteClient, fetchClients, updateClient } from "../../../api/clients";
+import { deleteClient, fetchClients } from "../../../api/clients";
 import ConfirmModal from "../../Common/ConfirmModal";
 import MessageModal from "../../Common/MessageModal";
-import { fetchLabelTemplates } from "../../../api/labelTemplates";
-import { createLabelField, normalizeClientLabelFields } from "../../../utils/labelFields";
+import { normalizeClientLabelFields } from "../../../utils/labelFields";
 
 // Listagem de clientes
-const Clients = () => {
+const Clients = ({ onNavigate }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [confirm, setConfirm] = useState({ show: false, id: "" });
-  const [editingId, setEditingId] = useState("");
-  const [draft, setDraft] = useState({
-    name: "",
-    code: "",
-    contact: "",
-    notes: "",
-    labelTemplateId: "",
-    labelFields: []
-  });
-  const [templates, setTemplates] = useState([]);
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState({
     show: false,
@@ -46,13 +35,10 @@ const Clients = () => {
       .finally(() => setLoading(false));
   };
 
-  // Carrega ao montar
   useEffect(() => {
     loadItems();
-    fetchLabelTemplates({ active: true }).then(setTemplates).catch(() => {});
   }, []);
 
-  // Pesquisa com debounce
   useEffect(() => {
     const handle = setTimeout(() => {
       loadItems(search.trim());
@@ -61,9 +47,7 @@ const Clients = () => {
   }, [search]);
 
   // Abre confirmação de remoção
-  const requestDelete = (id) => {
-    setConfirm({ show: true, id });
-  };
+  const requestDelete = (id) => setConfirm({ show: true, id });
 
   // Confirma remoção
   const confirmDelete = () => {
@@ -78,61 +62,6 @@ const Clients = () => {
           show: true,
           title: "Erro",
           message: "Erro ao remover cliente."
-        });
-      });
-  };
-
-  // Inicia edição inline do cliente
-  const startEdit = (item) => {
-    setEditingId(item._id);
-    setDraft({
-      name: item.name || "",
-      code: item.code || "",
-      contact: item.contact || "",
-      notes: item.notes || "",
-      labelTemplateId: item.labelTemplateId?._id || "",
-      labelFields: normalizeClientLabelFields(item.labelFields)
-    });
-  };
-
-  // Cancela edição do cliente
-  const cancelEdit = () => {
-    setEditingId("");
-    setDraft({
-      name: "",
-      code: "",
-      contact: "",
-      notes: "",
-      labelTemplateId: "",
-      labelFields: []
-    });
-  };
-
-  // Guarda alterações do cliente
-  const saveEdit = (item) => {
-    if (!draft.name.trim()) {
-      setModal({
-        show: true,
-        title: "Dados inválidos",
-        message: "O nome do cliente é obrigatório."
-      });
-      return;
-    }
-    updateClient(item._id, {
-      ...draft,
-      labelFields: normalizeClientLabelFields(draft.labelFields)
-    })
-      .then((updated) => {
-        setItems((prev) =>
-          prev.map((row) => (row._id === updated._id ? updated : row))
-        );
-        cancelEdit();
-      })
-      .catch(() => {
-        setModal({
-          show: true,
-          title: "Erro",
-          message: "Erro ao atualizar cliente."
         });
       });
   };
@@ -173,191 +102,39 @@ const Clients = () => {
           <tbody>
             {items.map((item) => (
               <tr key={item._id}>
-                <td style={{ minWidth: "180px" }}>
-                  {editingId === item._id ? (
-                    <Form.Group>
-                      <Form.Control
-                        value={draft.name}
-                        onChange={(e) =>
-                          setDraft((prev) => ({ ...prev, name: e.target.value }))
-                        }
-                        isInvalid={!draft.name.trim()}
-                      />
-                      <Form.Control.Feedback type="invalid">
-                        Nome obrigatório.
-                      </Form.Control.Feedback>
-                    </Form.Group>
-                  ) : (
-                    item.name
-                  )}
-                </td>
-                <td style={{ minWidth: "120px" }}>
-                  {editingId === item._id ? (
-                    <Form.Control
-                      value={draft.code}
-                      onChange={(e) =>
-                        setDraft((prev) => ({ ...prev, code: e.target.value }))
-                      }
-                    />
-                  ) : (
-                    item.code || "-"
-                  )}
-                </td>
-                <td style={{ minWidth: "160px" }}>
-                  {editingId === item._id ? (
-                    <Form.Control
-                      value={draft.contact}
-                      onChange={(e) =>
-                        setDraft((prev) => ({
-                          ...prev,
-                          contact: e.target.value
-                        }))
-                      }
-                    />
-                  ) : (
-                    item.contact || "-"
-                  )}
-                </td>
-                <td style={{ minWidth: "180px" }}>
-                  {editingId === item._id ? (
-                    <Form.Control
-                      value={draft.notes}
-                      onChange={(e) =>
-                        setDraft((prev) => ({ ...prev, notes: e.target.value }))
-                      }
-                    />
-                  ) : (
-                    item.notes || "-"
-                  )}
-                </td>
-                <td style={{ minWidth: "180px" }}>
-                  {editingId === item._id ? (
-                    <Form.Select
-                      value={draft.labelTemplateId}
-                      onChange={(e) =>
-                        setDraft((prev) => ({
-                          ...prev,
-                          labelTemplateId: e.target.value
-                        }))
-                      }
-                    >
-                      <option value="">Default global</option>
-                      {templates
-                        .filter(
-                          (template) =>
-                            !template.clientId || template.clientId?._id === item._id
-                        )
-                        .map((template) => (
-                        <option key={template._id} value={template._id}>
-                          {template.name}
-                        </option>
-                        ))}
-                    </Form.Select>
-                  ) : (
-                    item.labelTemplateId?.name || "Default global"
-                  )}
-                </td>
-                <td style={{ minWidth: "260px" }}>
-                  {editingId === item._id ? (
-                    <div>
-                      {draft.labelFields.map((field, index) => (
-                        <div
-                          key={field.fieldId}
-                          className="d-flex gap-2 align-items-center mb-2"
-                        >
-                          <Form.Control
-                            size="sm"
-                            placeholder={`Campo ${index + 1}`}
-                            value={field.name}
-                            onChange={(e) =>
-                              setDraft((prev) => ({
-                                ...prev,
-                                labelFields: prev.labelFields.map((row) =>
-                                  row.fieldId === field.fieldId
-                                    ? { ...row, name: e.target.value }
-                                    : row
-                                )
-                              }))
-                            }
-                          />
-                          <Button
-                            size="sm"
-                            variant="outline-danger"
-                            onClick={() =>
-                              setDraft((prev) => ({
-                                ...prev,
-                                labelFields: prev.labelFields.filter(
-                                  (row) => row.fieldId !== field.fieldId
-                                )
-                              }))
-                            }
-                          >
-                            Remover
-                          </Button>
-                        </div>
+                <td>{item.name}</td>
+                <td>{item.code || "-"}</td>
+                <td>{item.contact || "-"}</td>
+                <td>{item.notes || "-"}</td>
+                <td>{item.labelTemplateId?.name || "Default global"}</td>
+                <td style={{ minWidth: "220px", fontSize: "12px" }}>
+                  {normalizeClientLabelFields(item.labelFields).length === 0
+                    ? "-"
+                    : normalizeClientLabelFields(item.labelFields).map((field) => (
+                        <div key={field.fieldId}>{field.name}</div>
                       ))}
-                      <Button
-                        size="sm"
-                        variant="outline-secondary"
-                        onClick={() =>
-                          setDraft((prev) => ({
-                            ...prev,
-                            labelFields: [
-                              ...prev.labelFields,
-                              createLabelField(prev.labelFields.length)
-                            ]
-                          }))
-                        }
-                      >
-                        + Campo
-                      </Button>
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: "12px" }}>
-                      {normalizeClientLabelFields(item.labelFields).length === 0
-                        ? "-"
-                        : normalizeClientLabelFields(item.labelFields).map(
-                            (field) => (
-                              <div key={field.fieldId}>{field.name}</div>
-                            )
-                          )}
-                    </div>
-                  )}
                 </td>
                 <td>
-                  {editingId === item._id ? (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="success"
-                        onClick={() => saveEdit(item)}
-                        style={{ marginRight: "8px" }}
-                      >
-                        Guardar
-                      </Button>
-                      <Button size="sm" variant="secondary" onClick={cancelEdit}>
-                        Cancelar
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="outline-primary"
-                        onClick={() => startEdit(item)}
-                        style={{ marginRight: "8px" }}
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline-danger"
-                        onClick={() => requestDelete(item._id)}
-                      >
-                        Remover
-                      </Button>
-                    </>
-                  )}
+                  <Button
+                    size="sm"
+                    variant="outline-primary"
+                    onClick={() =>
+                      onNavigate?.("client_edit", {
+                        clientId: item._id,
+                        backKey: "client_list"
+                      })
+                    }
+                    style={{ marginRight: "8px" }}
+                  >
+                    Editar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline-danger"
+                    onClick={() => requestDelete(item._id)}
+                  >
+                    Remover
+                  </Button>
                 </td>
               </tr>
             ))}

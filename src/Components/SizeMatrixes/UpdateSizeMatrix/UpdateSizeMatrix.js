@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Button, Card, Form } from "react-bootstrap";
+import { Button, Form } from "react-bootstrap";
 import { fetchSizeMatrixes, updateSizeMatrix } from "../../../api/sizeMatrixes";
 import MessageModal from "../../Common/MessageModal";
 
 // Ecrã para atualizar matriz de tamanhos
-const UpdateSizeMatrix = () => {
+const UpdateSizeMatrix = (props) => {
   const [items, setItems] = useState([]);
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedId, setSelectedId] = useState(props.selectedId || "");
   const [form, setForm] = useState({ name: "", sizesText: "" });
   const [modal, setModal] = useState({
     show: false,
@@ -31,6 +31,10 @@ const UpdateSizeMatrix = () => {
   }, []);
 
   // Atualiza formulário quando muda seleção
+  useEffect(() => {
+    if (props.selectedId) setSelectedId(props.selectedId);
+  }, [props.selectedId]);
+
   useEffect(() => {
     const selected = items.find((item) => item._id === selectedId);
     if (!selected) return;
@@ -79,22 +83,24 @@ const UpdateSizeMatrix = () => {
   };
 
   return (
-    <Card style={{ padding: "16px" }}>
+    <div>
       <h3>Atualizar Matriz de Tamanhos</h3>
-      <Form.Group className="mb-3">
-        <Form.Label>Selecionar matriz</Form.Label>
-        <Form.Select
-          value={selectedId}
-          onChange={(e) => setSelectedId(e.target.value)}
-        >
-          <option value="">-- selecione --</option>
-          {items.map((item) => (
-            <option key={item._id} value={item._id}>
-              {item.name}
-            </option>
-          ))}
-        </Form.Select>
-      </Form.Group>
+      {!props.selectedId ? (
+        <Form.Group className="mb-3">
+          <Form.Label>Selecionar matriz</Form.Label>
+          <Form.Select
+            value={selectedId}
+            onChange={(e) => setSelectedId(e.target.value)}
+          >
+            <option value="">-- selecione --</option>
+            {items.map((item) => (
+              <option key={item._id} value={item._id}>
+                {item.name}
+              </option>
+            ))}
+          </Form.Select>
+        </Form.Group>
+      ) : null}
 
       {selectedId ? (
         <Form onSubmit={onSubmit}>
@@ -124,7 +130,7 @@ const UpdateSizeMatrix = () => {
         message={modal.message}
         onClose={closeModal}
       />
-    </Card>
+    </div>
   );
 };
 

@@ -1,21 +1,22 @@
 .form-control {
 }
 
-.form-control div{
-    padding: 10px;
-}
-
 .form-control Table{
     border-radius: 5px;
 }
 
 .form-control Button{
-    padding: 10px;
+    margin-top: 10px;
 }
 
 .table{
     table-layout: fixed;
     width: 100%;
+}
+
+.tableCard{
+    margin-top: 8px;
+    padding: 8px;
 }
 
 .table td{

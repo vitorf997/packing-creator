@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Button, Card, Form } from "react-bootstrap";
+import { Button, Form } from "react-bootstrap";
 import { fetchClients, updateClient } from "../../../api/clients";
 import MessageModal from "../../Common/MessageModal";
 import { fetchLabelTemplates } from "../../../api/labelTemplates";
 import { createLabelField, normalizeClientLabelFields } from "../../../utils/labelFields";
 
 // Ecrã para atualizar cliente
-const UpdateClient = () => {
+const UpdateClient = (props) => {
   const [items, setItems] = useState([]);
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedId, setSelectedId] = useState(props.selectedId || "");
   const [form, setForm] = useState({
     name: "",
     code: "",
@@ -40,6 +40,10 @@ const UpdateClient = () => {
       });
     fetchLabelTemplates({ active: true }).then(setTemplates).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (props.selectedId) setSelectedId(props.selectedId);
+  }, [props.selectedId]);
 
   useEffect(() => {
     fetchLabelTemplates(
@@ -122,22 +126,24 @@ const UpdateClient = () => {
   };
 
   return (
-    <Card style={{ padding: "16px" }}>
+    <div>
       <h3>Atualizar Cliente</h3>
-      <Form.Group className="mb-3">
-        <Form.Label>Selecionar cliente</Form.Label>
-        <Form.Select
-          value={selectedId}
-          onChange={(e) => setSelectedId(e.target.value)}
-        >
-          <option value="">-- selecione --</option>
-          {items.map((item) => (
-            <option key={item._id} value={item._id}>
-              {item.name} ({item.code || "sem código"})
-            </option>
-          ))}
-        </Form.Select>
-      </Form.Group>
+      {!props.selectedId ? (
+        <Form.Group className="mb-3">
+          <Form.Label>Selecionar cliente</Form.Label>
+          <Form.Select
+            value={selectedId}
+            onChange={(e) => setSelectedId(e.target.value)}
+          >
+            <option value="">-- selecione --</option>
+            {items.map((item) => (
+              <option key={item._id} value={item._id}>
+                {item.name} ({item.code || "sem código"})
+              </option>
+            ))}
+          </Form.Select>
+        </Form.Group>
+      ) : null}
 
       {selectedId ? (
         <Form onSubmit={onSubmit}>
@@ -221,7 +227,7 @@ const UpdateClient = () => {
         message={modal.message}
         onClose={closeModal}
       />
-    </Card>
+    </div>
   );
 };
 

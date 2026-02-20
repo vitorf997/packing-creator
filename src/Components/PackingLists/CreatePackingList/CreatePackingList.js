@@ -25,6 +25,8 @@ const CreatePackingList = (props) => {
   const [clients, setClients] = useState([]);
   const [selectedClientId, setSelectedClientId] = useState("");
   const [labelItems, setLabelItems] = useState([]);
+  const [tableLabelItems, setTableLabelItems] = useState([]);
+  const [labelItemsDirty, setLabelItemsDirty] = useState(false);
   const [touched, setTouched] = useState({
     clientId: false,
     sizeMatrixId: false
@@ -82,11 +84,23 @@ const CreatePackingList = (props) => {
   useEffect(() => {
     setLabelItems((prev) => {
       const normalized = normalizeLabelItems(prev, clientLabelFields);
-      if (clientLabelFields.length === 0) return [];
-      if (normalized.length > 0) return normalized;
-      return [createLabelItem(clientLabelFields, 0)];
+      if (clientLabelFields.length === 0) {
+        setTableLabelItems([]);
+        setLabelItemsDirty(false);
+        return [];
+      }
+      const baseItems =
+        normalized.length > 0 ? normalized : [createLabelItem(clientLabelFields, 0)];
+      setTableLabelItems(baseItems);
+      setLabelItemsDirty(false);
+      return baseItems;
     });
   }, [clientLabelFields]);
+
+  const applyLabelItemsToTable = () => {
+    setTableLabelItems(normalizeLabelItems(labelItems, clientLabelFields));
+    setLabelItemsDirty(false);
+  };
 
   // Submete o formulário e grava via API
   const submitHandler = (payload) => {
@@ -102,7 +116,7 @@ const CreatePackingList = (props) => {
       ...payload,
       sizeMatrixId: selectedMatrixId,
       clientId: selectedClientId,
-      labelItems: normalizeLabelItems(labelItems, clientLabelFields)
+      labelItems: normalizeLabelItems(tableLabelItems, clientLabelFields)
     })
       .then(() => {
         setModal({
@@ -113,6 +127,8 @@ const CreatePackingList = (props) => {
         setSelectedClientId("");
         setSelectedMatrixId("");
         setLabelItems([]);
+        setTableLabelItems([]);
+        setLabelItemsDirty(false);
       })
       .catch(() => {
         setModal({
@@ -123,7 +139,10 @@ const CreatePackingList = (props) => {
       });
   };
 
-  const canSubmit = selectedClientId && selectedMatrixId;
+  const canSubmit =
+    selectedClientId &&
+    selectedMatrixId &&
+    (!clientLabelFields.length || !labelItemsDirty);
   const showErrors = !canSubmit && (touched.clientId || touched.sizeMatrixId);
 
   return (
@@ -198,8 +217,9 @@ const CreatePackingList = (props) => {
                       <Form.Control
                         value={field.value}
                         onChange={(e) =>
-                          setLabelItems((prev) =>
-                            prev.map((row) =>
+                          setLabelItems((prev) => {
+                            setLabelItemsDirty(true);
+                            return prev.map((row) =>
                               row.itemId !== item.itemId
                                 ? row
                                 : {
@@ -210,8 +230,8 @@ const CreatePackingList = (props) => {
                                         : entry
                                     )
                                   }
-                            )
-                          )
+                            );
+                          })
                         }
                         placeholder={field.name}
                         disabled={!selectedClientId}
@@ -223,9 +243,10 @@ const CreatePackingList = (props) => {
                       type="button"
                       className="btn btn-outline-danger btn-sm"
                       onClick={() =>
-                        setLabelItems((prev) =>
-                          prev.filter((row) => row.itemId !== item.itemId)
-                        )
+                        setLabelItems((prev) => {
+                          setLabelItemsDirty(true);
+                          return prev.filter((row) => row.itemId !== item.itemId);
+                        })
                       }
                       disabled={labelItems.length <= 1}
                     >
@@ -244,17 +265,33 @@ const CreatePackingList = (props) => {
                   type="button"
                   className="btn btn-outline-secondary btn-sm"
                   onClick={() =>
-                    setLabelItems((prev) => [
-                      ...prev,
-                      createLabelItem(clientLabelFields, prev.length)
-                    ])
+                    setLabelItems((prev) => {
+                      setLabelItemsDirty(true);
+                      return [
+                        ...prev,
+                        createLabelItem(clientLabelFields, prev.length)
+                      ];
+                    })
                   }
                   disabled={!selectedClientId}
                 >
                   + Adicionar Referência
                 </button>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm ms-2"
+                  onClick={applyLabelItemsToTable}
+                  disabled={!selectedClientId || !selectedMatrixId}
+                >
+                  Atualizar Tabela
+                </button>
               </div>
             </>
+          ) : null}
+          {labelItemsDirty ? (
+            <div className="text-warning mb-2">
+              Existem alterações nos campos. Clique em "Atualizar Tabela".
+            </div>
           ) : null}
           {showErrors ? (
             <div className="text-danger">Preenche todos os campos obrigatórios.</div>
@@ -275,7 +312,7 @@ const CreatePackingList = (props) => {
         submitLabel="Gravar Packing"
         isSubmitDisabled={!canSubmit}
         labelFieldDefs={clientLabelFields}
-        labelItems={labelItems}
+        labelItems={tableLabelItems}
       />
       <MessageModal
         show={modal.show}

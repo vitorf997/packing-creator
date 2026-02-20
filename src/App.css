@@ -1,38 +1,164 @@
-.App {
-  text-align: center;
+.appRoot {
+  --app-bg: #f4f6fa;
+  --surface-bg: #ffffff;
+  --surface-alt-bg: #eef2f8;
+  --surface-border: #d9e0eb;
+  --text-primary: #202733;
+  --text-secondary: #5f6c80;
+  --accent: #1f6feb;
+  --accent-contrast: #ffffff;
+  --sidebar-bg: linear-gradient(180deg, #f8fbff 0%, #ecf3ff 100%);
+  --sidebar-text: #1d314f;
+  --sidebar-subtitle: #5f7698;
+  --sidebar-list-bg: #ffffff;
+  --sidebar-list-border: #d6e1f2;
+  --sidebar-hover-bg: #edf3ff;
+  --sidebar-active-bg: linear-gradient(90deg, #1f6feb 0%, #2f81f7 100%);
+  --sidebar-active-text: #ffffff;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.appRoot[data-theme="dark"] {
+  --app-bg: #0f1319;
+  --surface-bg: #171d27;
+  --surface-alt-bg: #1e2633;
+  --surface-border: #2d3749;
+  --text-primary: #e6edf7;
+  --text-secondary: #9fb0c7;
+  --accent: #2f81f7;
+  --accent-contrast: #ffffff;
+  --sidebar-bg: linear-gradient(180deg, #0f1a2b 0%, #0b1322 100%);
+  --sidebar-text: #e9f1ff;
+  --sidebar-subtitle: #93a4c3;
+  --sidebar-list-bg: rgba(255, 255, 255, 0.03);
+  --sidebar-list-border: rgba(255, 255, 255, 0.08);
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.06);
+  --sidebar-active-bg: linear-gradient(90deg, #1f6feb 0%, #2f81f7 100%);
+  --sidebar-active-text: #ffffff;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+body[data-theme="light"],
+body[data-theme="dark"] {
+  background: var(--app-bg);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.appLayout {
   display: flex;
-  flex-direction: column;
+  min-height: 100vh;
+}
+
+.appMain {
+  width: 100%;
+  background: var(--app-bg);
+}
+
+.appTopBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px 0;
+}
+
+.appContent {
+  padding: 10px 8px 14px;
+}
+
+.themeToggleBtn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--surface-border);
+  border-radius: 999px;
+  background: var(--surface-bg);
+  color: var(--text-primary);
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  cursor: pointer;
 }
 
-.App-link {
-  color: #61dafb;
+.backBtn {
+  height: 40px;
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  background: var(--surface-bg);
+  color: var(--text-primary);
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-weight: 600;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.backBtn:hover {
+  background: var(--surface-alt-bg);
+}
+
+.themeToggleBtn:hover {
+  background: var(--surface-alt-bg);
+}
+
+.themeToggleBtn svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.appRoot .card,
+.appRoot .modal-content {
+  background-color: var(--surface-bg);
+  color: var(--text-primary);
+  border-color: var(--surface-border);
+}
+
+.appRoot .text-muted {
+  color: var(--text-secondary) !important;
+}
+
+.appRoot .form-control,
+.appRoot .form-select {
+  background-color: var(--surface-bg);
+  color: var(--text-primary);
+  border-color: var(--surface-border);
+}
+
+.appRoot .form-control::placeholder {
+  color: var(--text-secondary);
+}
+
+.appRoot .table {
+  color: var(--text-primary);
+}
+
+.appRoot .table > :not(caption) > * > * {
+  border-color: var(--surface-border);
+}
+
+.appRoot[data-theme="light"] .table-dark {
+  --bs-table-bg: #ffffff;
+  --bs-table-accent-bg: transparent;
+  --bs-table-striped-color: var(--text-primary);
+  --bs-table-striped-bg: #f6f9fc;
+  --bs-table-active-color: var(--text-primary);
+  --bs-table-active-bg: #edf3fa;
+  --bs-table-hover-color: var(--text-primary);
+  --bs-table-hover-bg: #eef4fb;
+  --bs-table-color: var(--text-primary);
+  --bs-table-border-color: var(--surface-border);
+  color: var(--text-primary);
+}
+
+.appRoot[data-theme="light"] .table-dark > :not(caption) > * > * {
+  border-color: var(--surface-border);
+}
+
+.appRoot[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+  color: var(--text-primary);
+  background-color: #1f2733;
+}
+
+.appRoot[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(even) > * {
+  color: var(--text-primary);
+  background-color: #18202b;
 }

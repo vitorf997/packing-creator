@@ -320,11 +320,7 @@ const PackingListForm = (props) => {
 
   return (
     <Form className={`${styles["form-control"]}`} onSubmit={submitFormHandler}>
-      <div>
-        <Card>PACKING FORM</Card>
-      </div>
-      <div>
-        <Card>
+      <Card className={styles.tableCard}>
           <Table striped bordered hover variant="dark" className={styles.table}>
             <thead>
               <tr>
@@ -468,8 +464,7 @@ const PackingListForm = (props) => {
               </tr>
             </tbody>
           </Table>
-        </Card>
-      </div>
+      </Card>
       <Button
         variant="primary"
         type={"submit"}
