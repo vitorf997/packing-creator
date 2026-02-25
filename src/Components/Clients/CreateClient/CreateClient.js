@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Form, Card } from "react-bootstrap";
+import { Button, Form, Card, Col, Row } from "react-bootstrap";
 import { createClient } from "../../../api/clients";
 import MessageModal from "../../Common/MessageModal";
 import { fetchLabelTemplates } from "../../../api/labelTemplates";
@@ -11,6 +11,7 @@ const CreateClient = () => {
     name: "",
     code: "",
     contact: "",
+    language: "pt",
     notes: "",
     labelTemplateId: "",
     labelFields: []
@@ -83,6 +84,7 @@ const CreateClient = () => {
           name: "",
           code: "",
           contact: "",
+          language: "pt",
           notes: "",
           labelTemplateId: "",
           labelFields: []
@@ -98,62 +100,73 @@ const CreateClient = () => {
   };
 
   return (
-    <Card style={{ padding: "16px" }}>
-      <h3>Criar Cliente</h3>
+    <Card className="pageSectionCard">
+      <h3 className="mb-3">Criar Cliente</h3>
       <Form onSubmit={onSubmit}>
-        <Form.Group className="mb-3">
-          <Form.Label>Nome</Form.Label>
-          <Form.Control
-            name="name"
-            value={form.name}
-            onChange={onChange}
-            placeholder="Nome do cliente"
-          />
-        </Form.Group>
-        <Form.Group className="mb-3">
-          <Form.Label>Código</Form.Label>
-          <Form.Control
-            name="code"
-            value={form.code}
-            onChange={onChange}
-            placeholder="Código interno"
-          />
-        </Form.Group>
-        <Form.Group className="mb-3">
-          <Form.Label>Contacto</Form.Label>
-          <Form.Control
-            name="contact"
-            value={form.contact}
-            onChange={onChange}
-            placeholder="Email/telefone"
-          />
-        </Form.Group>
-        <Form.Group className="mb-3">
-          <Form.Label>Notas</Form.Label>
-          <Form.Control
-            name="notes"
-            value={form.notes}
-            onChange={onChange}
-            placeholder="Observações"
-          />
-        </Form.Group>
-        <Form.Group className="mb-3">
-          <Form.Label>Layout de Etiqueta</Form.Label>
-          <Form.Select
-            name="labelTemplateId"
-            value={form.labelTemplateId}
-            onChange={onChange}
-          >
-            <option value="">Default global</option>
-            {templates
-              .filter((template) => !template.clientId)
-              .map((template) => (
-              <option key={template._id} value={template._id}>
-                {template.name}
-              </option>
-              ))}
-          </Form.Select>
-        </Form.Group>
+        <Row>
+          <Form.Group as={Col} md={6} className="mb-3">
+            <Form.Label>Nome</Form.Label>
+            <Form.Control
+              name="name"
+              value={form.name}
+              onChange={onChange}
+              placeholder="Nome do cliente"
+            />
+          </Form.Group>
+          <Form.Group as={Col} md={6} className="mb-3">
+            <Form.Label>Código</Form.Label>
+            <Form.Control
+              name="code"
+              value={form.code}
+              onChange={onChange}
+              placeholder="Código interno"
+            />
+          </Form.Group>
+          <Form.Group as={Col} md={6} className="mb-3">
+            <Form.Label>Contacto</Form.Label>
+            <Form.Control
+              name="contact"
+              value={form.contact}
+              onChange={onChange}
+              placeholder="Email/telefone"
+            />
+          </Form.Group>
+          <Form.Group as={Col} md={6} className="mb-3">
+            <Form.Label>Idioma do Packing</Form.Label>
+            <Form.Select name="language" value={form.language} onChange={onChange}>
+              <option value="pt">Português</option>
+              <option value="en">English</option>
+              <option value="es">Español</option>
+              <option value="fr">Français</option>
+            </Form.Select>
+          </Form.Group>
+          <Form.Group as={Col} md={6} className="mb-3">
+            <Form.Label>Layout de Etiqueta</Form.Label>
+            <Form.Select
+              name="labelTemplateId"
+              value={form.labelTemplateId}
+              onChange={onChange}
+            >
+              <option value="">Default global</option>
+              {templates
+                .filter((template) => !template.clientId)
+                .map((template) => (
+                <option key={template._id} value={template._id}>
+                  {template.name}
+                </option>
+                ))}
+            </Form.Select>
+          </Form.Group>
+          <Form.Group as={Col} md={12} className="mb-3">
+            <Form.Label>Notas</Form.Label>
+            <Form.Control
+              name="notes"
+              value={form.notes}
+              onChange={onChange}
+              placeholder="Observações"
+            />
+          </Form.Group>
+        </Row>
         <h5 className="mt-4 mb-3">Campos do Rótulo</h5>
         {form.labelFields.map((field, index) => (
           <div

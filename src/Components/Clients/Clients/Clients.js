@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Form, Table } from "react-bootstrap";
+import { Button, Card, Form, Table } from "react-bootstrap";
 import { deleteClient, fetchClients } from "../../../api/clients";
 import ConfirmModal from "../../Common/ConfirmModal";
 import MessageModal from "../../Common/MessageModal";
@@ -67,14 +67,16 @@ const Clients = ({ onNavigate }) => {
   };
 
   return (
-    <div>
-      <h3>Clientes</h3>
-      <div style={{ display: "flex", gap: "12px", marginBottom: "12px" }}>
+    <Card className="pageSectionCard">
+      <div className="pageHeaderRow">
+        <h3 className="mb-0">Clientes</h3>
+      </div>
+      <div className="pageFilters">
         <Form.Control
+          className="filterInputSm"
           placeholder="Pesquisar por nome, código ou contacto..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ maxWidth: "320px" }}
         />
         <Button
           onClick={() => loadItems(search.trim())}
@@ -85,9 +87,9 @@ const Clients = ({ onNavigate }) => {
         </Button>
       </div>
       {items.length === 0 ? (
-        <p style={{ marginTop: "12px" }}>Sem resultados.</p>
+        <p className="mutedEmpty">Sem resultados.</p>
       ) : (
-        <Table striped bordered hover responsive style={{ marginTop: "12px" }}>
+        <Table striped bordered hover responsive className="mb-0">
           <thead className="table-dark">
             <tr>
               <th>Nome</th>
@@ -115,6 +117,7 @@ const Clients = ({ onNavigate }) => {
                       ))}
                 </td>
                 <td>
+                  <div className="actionsCell">
                   <Button
                     size="sm"
                     variant="outline-primary"
@@ -124,7 +127,6 @@ const Clients = ({ onNavigate }) => {
                         backKey: "client_list"
                       })
                     }
-                    style={{ marginRight: "8px" }}
                   >
                     Editar
                   </Button>
@@ -135,6 +137,7 @@ const Clients = ({ onNavigate }) => {
                   >
                     Remover
                   </Button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -154,7 +157,7 @@ const Clients = ({ onNavigate }) => {
         message={modal.message}
         onClose={closeModal}
       />
-    </div>
+    </Card>
   );
 };
 

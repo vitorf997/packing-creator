@@ -4,7 +4,7 @@ import {
   normalizeLabelItems
 } from "../../../utils/labelFields";
 
-// Gera rótulos por caixa e abre uma janela de impressão A6
+// Gera rótulos por caixa e abre uma janela de preview/impressão A6 paginada
 export const openPrintLabelsWindow = async (packingList) => {
   const labels = buildBoxLabels(packingList);
   if (labels.length === 0) return;
@@ -55,13 +55,20 @@ export const openPrintLabelsWindow = async (packingList) => {
   const brandTextColor = layout.brandTextColor || "#ffffff";
   const showRemainderLabel = Boolean(layout.showRemainderLabel);
 
+  const firstBox = Number(labels[0]?.box) || 1;
   const html = `<!doctype html>
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Rotulos A6</title>
-    <style>
+    <title>Preview Rótulos A6</title>
+    <style id="pageStyle">
       @page { size: A6 ${orientation}; margin: 4mm; }
+    </style>
+    <style>
+      :root {
+        --page-width: 140mm;
+        --page-height: 97mm;
+      }
       * { box-sizing: border-box; }
       html, body { margin: 0; padding: 0; }
       body {
@@ -70,11 +77,56 @@ export const openPrintLabelsWindow = async (packingList) => {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
+      .toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        background: #ffffff;
+        border-bottom: 1px solid #d9d9d9;
+        flex-wrap: wrap;
+      }
+      .toolbar input {
+        width: 90px;
+        padding: 6px 8px;
+        border: 1px solid #c8c8c8;
+        border-radius: 4px;
+      }
+      .toolbar button {
+        padding: 6px 10px;
+        border: 1px solid #c8c8c8;
+        border-radius: 4px;
+        cursor: pointer;
+        background: #f8f8f8;
+      }
+      .toolbar button.primary {
+        background: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+      }
+      .toolbar .meta {
+        margin-left: auto;
+        font-size: 13px;
+        color: #445;
+      }
+      .toolbar .formatBlock {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: 10px;
+      }
+      .pages {
+        padding: 8px;
+        background: #f4f4f4;
+      }
       .page {
-        width: 140mm;
-        height: 97mm;
+        width: var(--page-width);
+        height: var(--page-height);
         display: grid;
-        grid-template-rows: auto auto 1fr auto auto;
+        grid-template-rows: auto auto auto 1fr auto auto;
         gap: 3mm;
         page-break-after: always;
       }
@@ -112,6 +164,16 @@ export const openPrintLabelsWindow = async (packingList) => {
         align-items: center;
         justify-content: center;
       }
+      .poRow {
+        border: 1px solid #111;
+        min-height: 7mm;
+        padding: 1.5mm 2.5mm;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .poRow b { font-weight: 700; }
       .gridWrap { display: flex; align-items: stretch; }
       .grid { width: 100%; border-collapse: collapse; table-layout: fixed; }
       .grid th, .grid td {
@@ -136,16 +198,40 @@ export const openPrintLabelsWindow = async (packingList) => {
       }
       .muted { color: #666; font-size: 10px; text-align: center; }
       @media screen {
-        body { padding: 8px; background: #f4f4f4; }
         .page { margin: 0 auto 12px; background: #fff; padding: 4mm; }
+      }
+      @media print {
+        .toolbar { display: none !important; }
+        .pages { padding: 0; background: #fff; }
+      }
+      body.mode-a4 {
+        --page-width: 287mm;
+        --page-height: 200mm;
       }
     </style>
   </head>
   <body>
-    ${labels
+    <div class="toolbar">
+      <strong>Preview A6</strong>
+      <span>De</span>
+      <input id="boxFrom" type="number" min="${firstBox}" max="${totalBoxes}" value="${firstBox}" />
+      <span>Até</span>
+      <input id="boxTo" type="number" min="${firstBox}" max="${totalBoxes}" value="${totalBoxes}" />
+      <button onclick="applyRange()">Aplicar intervalo</button>
+      <button onclick="resetRange()">Mostrar tudo</button>
+      <div class="formatBlock">
+        <strong>Preview:</strong>
+        <label><input type="radio" name="format" value="A6" checked onchange="setFormat(this.value)" /> A6</label>
+        <label><input type="radio" name="format" value="A4" onchange="setFormat(this.value)" /> A4</label>
+      </div>
+      <button class="primary" onclick="window.print()">Imprimir</button>
+      <span id="meta" class="meta"></span>
+    </div>
+    <div class="pages">
+      ${labels
       .map((label) => {
         return `
-          <div class="page">
+          <div class="page" data-box="${label.box}">
             <div class="topRow">
               <div class="topBox">${escapeHtml(topLeftValue)}</div>
               <div class="topBox">${escapeHtml(topRightValue)}</div>
@@ -154,6 +240,7 @@ export const openPrintLabelsWindow = async (packingList) => {
               <div class="brandBox">${escapeHtml(brandName)}</div>
               <div class="clientBox">${escapeHtml(clientName)}</div>
             </div>
+            <div class="poRow"><b>PO:</b> <span>${escapeHtml(po || "-")}</span></div>
             <div class="gridWrap">
               <table class="grid">
                 <thead>
@@ -205,6 +292,63 @@ export const openPrintLabelsWindow = async (packingList) => {
         `;
       })
       .join("")}
+    </div>
+    <script>
+      const minBox = ${firstBox};
+      const maxBox = ${totalBoxes};
+      const pages = Array.from(document.querySelectorAll(".page"));
+      const inputFrom = document.getElementById("boxFrom");
+      const inputTo = document.getElementById("boxTo");
+      const meta = document.getElementById("meta");
+      const pageStyle = document.getElementById("pageStyle");
+
+      const updateMeta = () => {
+        const visible = pages.filter((page) => page.style.display !== "none").length;
+        meta.textContent = "Caixas visíveis: " + visible + " de " + pages.length;
+      };
+
+      window.applyRange = () => {
+        let from = Number(inputFrom.value);
+        let to = Number(inputTo.value);
+        if (!Number.isFinite(from)) from = minBox;
+        if (!Number.isFinite(to)) to = maxBox;
+        from = Math.max(minBox, Math.min(maxBox, Math.trunc(from)));
+        to = Math.max(minBox, Math.min(maxBox, Math.trunc(to)));
+        if (from > to) {
+          const tmp = from;
+          from = to;
+          to = tmp;
+        }
+        inputFrom.value = from;
+        inputTo.value = to;
+        pages.forEach((page) => {
+          const box = Number(page.dataset.box) || 0;
+          page.style.display = box >= from && box <= to ? "grid" : "none";
+        });
+        updateMeta();
+      };
+
+      window.resetRange = () => {
+        inputFrom.value = minBox;
+        inputTo.value = maxBox;
+        pages.forEach((page) => {
+          page.style.display = "grid";
+        });
+        updateMeta();
+      };
+
+      window.setFormat = (format) => {
+        if (format === "A4") {
+          document.body.classList.add("mode-a4");
+          pageStyle.textContent = "@page { size: A4 ${orientation}; margin: 5mm; }";
+          return;
+        }
+        document.body.classList.remove("mode-a4");
+        pageStyle.textContent = "@page { size: A6 ${orientation}; margin: 4mm; }";
+      };
+
+      updateMeta();
+    </script>
   </body>
 </html>`;
 
@@ -212,7 +356,6 @@ export const openPrintLabelsWindow = async (packingList) => {
   win.document.write(html);
   win.document.close();
   win.focus();
-  win.print();
 };
 
 const resolveTemplate = async (clientTemplate, clientId) => {

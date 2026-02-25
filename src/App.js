@@ -10,6 +10,7 @@ function App() {
   // Guarda a view atual
   const [view, setView] = useState({ key: "packing_create", params: {} });
   const [theme, setTheme] = useState(() => localStorage.getItem("app-theme") || "light");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     document.body.setAttribute("data-theme", theme);
@@ -34,13 +35,44 @@ function App() {
     setTheme((current) => (current === "dark" ? "light" : "dark"));
   };
 
+  const viewTitleMap = {
+    packing_create: "Criar Packing",
+    packing_list: "Packings",
+    packing_edit: "Editar Packing",
+    client_create: "Criar Cliente",
+    client_list: "Clientes",
+    client_edit: "Editar Cliente",
+    size_create: "Criar Matriz",
+    size_list: "Matrizes",
+    size_edit: "Editar Matriz",
+    label_templates: "Layout Rótulos",
+    packing_templates: "Layout Packing"
+  };
+  const currentTitle = viewTitleMap[view.key] || "Packing Creator";
+
   return (
     <div className="appRoot" data-theme={theme}>
       <div className="appLayout">
-        <Sidebar onSelectItem={selectItemHandler} selectedItem={view.key} />
+        <Sidebar
+          onSelectItem={selectItemHandler}
+          selectedItem={view.key}
+          collapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+        />
         <div className="appMain">
           <div className="appTopBar">
-            <div>
+            <div className="topBarLeft">
+              <button
+                type="button"
+                className="backBtn"
+                onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+                aria-label={isSidebarCollapsed ? "Expandir menu" : "Colapsar menu"}
+              >
+                {isSidebarCollapsed ? "☰" : "☷"}
+              </button>
+              <div className="viewTitleBlock">
+                <h1 className="viewTitle">{currentTitle}</h1>
+              </div>
               {view.params?.backKey ? (
                 <button
                   type="button"
@@ -52,15 +84,17 @@ function App() {
                 </button>
               ) : null}
             </div>
-            <button
-              type="button"
-              className="themeToggleBtn"
-              onClick={toggleThemeHandler}
-              aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
-              title={theme === "dark" ? "Modo claro" : "Modo escuro"}
-            >
-              <ThemeIcon theme={theme} />
-            </button>
+            <div className="topBarActions">
+              <button
+                type="button"
+                className="themeToggleBtn"
+                onClick={toggleThemeHandler}
+                aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
+                title={theme === "dark" ? "Modo claro" : "Modo escuro"}
+              >
+                <ThemeIcon theme={theme} />
+              </button>
+            </div>
           </div>
           <div className="appContent">
             <Content

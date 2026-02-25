@@ -3,6 +3,12 @@ import Client from "../models/Client.js";
 import LabelTemplate from "../models/LabelTemplate.js";
 
 const router = express.Router();
+const ALLOWED_LANGUAGES = new Set(["pt", "en", "es", "fr"]);
+
+const normalizeLanguage = (value) => {
+  const language = String(value || "pt").trim().toLowerCase();
+  return ALLOWED_LANGUAGES.has(language) ? language : "pt";
+};
 
 const normalizeLabelFields = (labelFields = []) => {
   const isMeaningfulName = (value) => {
@@ -102,7 +108,7 @@ router.get("/:id", async (req, res) => {
 // Cria cliente
 router.post("/", async (req, res) => {
   try {
-    const { name, code, contact, notes, labelTemplateId, labelFields } = req.body;
+    const { name, code, contact, language, notes, labelTemplateId, labelFields } = req.body;
     if (!name || String(name).trim().length === 0) {
       return res.status(400).json({ error: "name is required" });
     }
@@ -114,6 +120,7 @@ router.post("/", async (req, res) => {
       name: String(name).trim(),
       code: String(code || "").trim(),
       contact: String(contact || "").trim(),
+      language: normalizeLanguage(language),
       notes: String(notes || "").trim(),
       labelFields: normalizeLabelFields(labelFields),
       labelTemplateId: labelTemplateId || null
@@ -127,7 +134,7 @@ router.post("/", async (req, res) => {
 // Atualiza cliente
 router.put("/:id", async (req, res) => {
   try {
-    const { name, code, contact, notes, labelTemplateId, labelFields } = req.body;
+    const { name, code, contact, language, notes, labelTemplateId, labelFields } = req.body;
     if (!name || String(name).trim().length === 0) {
       return res.status(400).json({ error: "name is required" });
     }
@@ -141,6 +148,7 @@ router.put("/:id", async (req, res) => {
         name: String(name).trim(),
         code: String(code || "").trim(),
         contact: String(contact || "").trim(),
+        language: normalizeLanguage(language),
         notes: String(notes || "").trim(),
         labelFields: normalizeLabelFields(labelFields),
         labelTemplateId: labelTemplateId || null

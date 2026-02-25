@@ -15,6 +15,24 @@ const Sidebar = (props) => {
     setOpenMenus((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const menuIcons = {
+    packing: "📦",
+    clients: "👥",
+    sizes: "📏",
+    labels: "🏷️"
+  };
+
+  const itemIcons = {
+    packing_create: "＋",
+    packing_list: "≣",
+    client_create: "＋",
+    client_list: "≣",
+    size_create: "＋",
+    size_list: "≣",
+    label_templates: "◫",
+    packing_templates: "▦"
+  };
+
   const renderMenu = (menuKey, title, items) => {
     const isOpen = openMenus[menuKey];
     const isItemActive = (id) => {
@@ -25,14 +43,20 @@ const Sidebar = (props) => {
       return false;
     };
     return (
-      <div className={classes.section}>
+      <div className={classes.section} key={menuKey}>
         <button
           type="button"
           className={classes.menuToggle}
           onClick={() => toggleMenu(menuKey)}
+          title={title}
         >
-          <span>{title}</span>
-          <span className={classes.menuArrow}>{isOpen ? "▾" : "▸"}</span>
+          <span className={classes.menuLabel}>
+            <span className={classes.menuIcon}>{menuIcons[menuKey] || "•"}</span>
+            {!props.collapsed ? <span>{title}</span> : null}
+          </span>
+          {!props.collapsed ? (
+            <span className={classes.menuArrow}>{isOpen ? "▾" : "▸"}</span>
+          ) : null}
         </button>
         {isOpen ? (
           <ListGroup variant="flush" className={classes.list}>
@@ -42,8 +66,10 @@ const Sidebar = (props) => {
                 action
                 active={isItemActive(item.id)}
                 onClick={() => props.onSelectItem(item.id)}
+                title={item.label}
               >
-                {item.label}
+                <span className={classes.itemIcon}>{itemIcons[item.id] || "•"}</span>
+                {!props.collapsed ? <span>{item.label}</span> : null}
               </ListGroup.Item>
             ))}
           </ListGroup>
@@ -53,15 +79,31 @@ const Sidebar = (props) => {
   };
 
   return (
-    <div className={classes.sidebar}>
+    <div className={`${classes.sidebar} ${props.collapsed ? classes.collapsed : ""}`}>
       <Card className={classes.card}>
         <Card.Body className={classes.header}>
-          <Card.Title className={classes.title}>Packing Creator</Card.Title>
-          <Card.Subtitle className={classes.subtitle}>
-            Gestão de listas
-          </Card.Subtitle>
+          <div className={classes.headerTop}>
+            {!props.collapsed ? (
+              <div>
+                <Card.Title className={classes.title}>Packing Creator</Card.Title>
+                <Card.Subtitle className={classes.subtitle}>
+                  Gestão de listas
+                </Card.Subtitle>
+              </div>
+            ) : (
+              <Card.Title className={classes.title}>PC</Card.Title>
+            )}
+            <button
+              type="button"
+              className={classes.collapseBtn}
+              onClick={props.onToggleCollapse}
+              title={props.collapsed ? "Expandir sidebar" : "Colapsar sidebar"}
+            >
+              {props.collapsed ? "→" : "←"}
+            </button>
+          </div>
         </Card.Body>
-        {renderMenu("packing", "Packing Lists", [
+        {renderMenu("packing", "Packings", [
           { id: "packing_create", label: "Criar" },
           { id: "packing_list", label: "Ver / Editar" }
         ])}
@@ -74,7 +116,8 @@ const Sidebar = (props) => {
           { id: "size_list", label: "Ver / Editar" }
         ])}
         {renderMenu("labels", "Etiquetas", [
-          { id: "label_templates", label: "Layouts" }
+          { id: "label_templates", label: "Layout Rótulos" },
+          { id: "packing_templates", label: "Layout Packing" }
         ])}
       </Card>
     </div>

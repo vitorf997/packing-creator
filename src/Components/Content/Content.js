@@ -6,6 +6,7 @@ import Clients from "../Clients/Clients/Clients";
 import CreateSizeMatrix from "../CreateSizeMatrix/CreateSizeMatrix";
 import SizesMatrixes from "../SizeMatrixes/SizesMatrixes/SizesMatrixes";
 import LabelTemplates from "../LabelTemplates/LabelTemplates/LabelTemplates";
+import PackingTemplates from "../PackingTemplates/PackingTemplates/PackingTemplates";
 import UpdateClient from "../Clients/UpdateClient/UpdateClient";
 import UpdateSizeMatrix from "../SizeMatrixes/UpdateSizeMatrix/UpdateSizeMatrix";
 import UpdatePackingList from "../PackingLists/UpdatePackingList/UpdatePackingList";
@@ -39,9 +40,11 @@ const Content = (props) => {
     content = <UpdateSizeMatrix selectedId={props.viewParams?.sizeMatrixId} />;
   } else if (props.selectedItem === "label_templates") {
     content = <LabelTemplates />;
+  } else if (props.selectedItem === "packing_templates") {
+    content = <PackingTemplates />;
   }
 
-  return <div>{content}</div>;
+  return <div className="contentShell">{content}</div>;
 };
 
 export default Content;

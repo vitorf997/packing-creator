@@ -13,6 +13,7 @@ const clientSchema = new mongoose.Schema(
     name: { type: String, required: true, index: true },
     code: { type: String, default: "", index: true },
     contact: { type: String, default: "", index: true },
+    language: { type: String, default: "pt", index: true },
     notes: { type: String, default: "" },
     labelFields: { type: [clientLabelFieldSchema], default: [] },
     labelTemplateId: {

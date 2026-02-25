@@ -21,20 +21,57 @@
 
 .table td{
     vertical-align: top;
+    background: inherit;
+}
+
+.table thead td{
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: var(--surface-alt-bg);
+    font-weight: 700;
 }
 
 .compactInput{
-    width: 90px;
+    width: 86px;
     padding: 4px 6px;
 }
 
 .invalidInput{
-    border: 2px solid #b00020;
-    box-shadow: 0 0 0 2px rgba(176, 0, 32, 0.15);
+    border: 2px solid var(--danger);
+    box-shadow: 0 0 0 2px var(--danger-soft);
 }
 
 .errorText{
-    color: #b00020;
+    color: var(--danger);
     font-size: 0.75rem;
     margin-top: 4px;
+}
+
+.stickyCol{
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--surface-bg) !important;
+}
+
+.table thead .stickyCol{
+    z-index: 4;
+    background: var(--surface-alt-bg) !important;
+}
+
+.invalidRow td{
+    background: var(--danger-soft) !important;
+}
+
+.totalRow td{
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    font-weight: 700;
+    background: var(--surface-alt-bg) !important;
+}
+
+.totalLabel{
+    text-align: right;
 }

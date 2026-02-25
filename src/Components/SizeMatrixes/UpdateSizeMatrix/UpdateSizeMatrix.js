@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Form } from "react-bootstrap";
+import { Button, Card, Form } from "react-bootstrap";
 import { fetchSizeMatrixes, updateSizeMatrix } from "../../../api/sizeMatrixes";
 import MessageModal from "../../Common/MessageModal";
 
@@ -83,8 +83,8 @@ const UpdateSizeMatrix = (props) => {
   };
 
   return (
-    <div>
-      <h3>Atualizar Matriz de Tamanhos</h3>
+    <Card className="pageSectionCard">
+      <h3 className="mb-3">Atualizar Matriz de Tamanhos</h3>
       {!props.selectedId ? (
         <Form.Group className="mb-3">
           <Form.Label>Selecionar matriz</Form.Label>
@@ -130,7 +130,7 @@ const UpdateSizeMatrix = (props) => {
         message={modal.message}
         onClose={closeModal}
       />
-    </div>
+    </Card>
   );
 };
 

@@ -45,7 +45,7 @@ const labelItemSchema = new mongoose.Schema(
 
 const packingListSchema = new mongoose.Schema(
   {
-    po: { type: String, default: "", index: true },
+    po: { type: String, required: true, trim: true, index: true },
     model: { type: String, default: "", index: true },
     clientId: { type: mongoose.Schema.Types.ObjectId, ref: "Client", required: true },
     sizeMatrixId: { type: mongoose.Schema.Types.ObjectId, ref: "SizeMatrix", required: true },

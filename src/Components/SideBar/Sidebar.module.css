@@ -3,6 +3,13 @@
     min-height: 100vh;
     background: var(--sidebar-bg);
     padding: 24px 18px;
+    border-right: 1px solid var(--surface-border);
+    transition: width 0.2s ease, padding 0.2s ease;
+}
+
+.collapsed {
+    width: 92px;
+    padding: 24px 10px;
 }
 
 .card {
@@ -16,6 +23,13 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 18px;
+}
+
+.headerTop {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
 }
 
 .title {
@@ -41,6 +55,9 @@
     color: var(--sidebar-text);
     border: none;
     padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     transition: background 0.2s ease, color 0.2s ease;
 }
 
@@ -73,16 +90,56 @@
     align-items: center;
     justify-content: space-between;
     cursor: pointer;
+    border-radius: 8px;
+}
+
+.menuToggle:hover {
+    background: rgba(255, 255, 255, 0.06);
 }
 
 .menuArrow {
     font-size: 0.9rem;
 }
 
-.sectionTitle {
-    color: var(--sidebar-subtitle);
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin: 0 0 8px 6px;
+.menuLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.menuIcon {
+    width: 20px;
+    text-align: center;
+}
+
+.itemIcon {
+    width: 18px;
+    text-align: center;
+    opacity: 0.9;
+}
+
+.collapseBtn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--sidebar-list-border);
+    background: var(--sidebar-list-bg);
+    color: var(--sidebar-text);
+    border-radius: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+@media (max-width: 991px) {
+    .sidebar {
+        width: 88px;
+        padding: 12px 8px;
+    }
+
+    .header {
+        padding: 10px;
+    }
+
+    .title {
+        font-size: 1rem;
+    }
 }

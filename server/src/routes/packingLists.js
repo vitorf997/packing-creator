@@ -51,7 +51,7 @@ router.get("/", async (req, res) => {
       .populate("sizeMatrixId", "name sizes")
       .populate({
         path: "clientId",
-        select: "name code contact labelFields labelTemplateId",
+        select: "name code contact language labelFields labelTemplateId",
         populate: {
           path: "labelTemplateId",
           select: "name key layout isDefault active"
@@ -85,7 +85,7 @@ router.get("/:id", async (req, res) => {
       .populate("sizeMatrixId", "name sizes")
       .populate({
         path: "clientId",
-        select: "name code contact labelFields labelTemplateId",
+        select: "name code contact language labelFields labelTemplateId",
         populate: {
           path: "labelTemplateId",
           select: "name key layout isDefault active"
@@ -115,6 +115,9 @@ router.post("/", async (req, res) => {
     } = req.body;
     if (!clientId) {
       return res.status(400).json({ error: "clientId is required" });
+    }
+    if (!po || !String(po).trim()) {
+      return res.status(400).json({ error: "po is required" });
     }
     if (!sizeMatrixId) {
       return res.status(400).json({ error: "sizeMatrixId is required" });
@@ -158,6 +161,9 @@ router.put("/:id", async (req, res) => {
     } = req.body;
     if (!clientId) {
       return res.status(400).json({ error: "clientId is required" });
+    }
+    if (!po || !String(po).trim()) {
+      return res.status(400).json({ error: "po is required" });
     }
     if (!sizeMatrixId) {
       return res.status(400).json({ error: "sizeMatrixId is required" });

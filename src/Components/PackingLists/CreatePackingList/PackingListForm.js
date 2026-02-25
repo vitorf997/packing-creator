@@ -10,15 +10,9 @@ const PackingListForm = (props) => {
     () => normalizeLabelItems(props.labelItems || [], props.labelFieldDefs || []),
     [props.labelItems, props.labelFieldDefs]
   );
-  const labelItemsStructureKey = useMemo(
-    () => labelItems.map((item) => item.itemId).join("|"),
-    [labelItems]
-  );
   const labelItemsForRows = useMemo(
     () => normalizeLabelItems(props.labelItems || [], props.labelFieldDefs || []),
-    // Recria linhas apenas quando a estrutura (add/remove) muda, não em cada edição de texto.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [labelItemsStructureKey, props.labelFieldDefs]
+    [props.labelItems, props.labelFieldDefs]
   );
 
   const createRowId = () => {
@@ -76,12 +70,15 @@ const PackingListForm = (props) => {
     Number(props.initialTotalUnits) || 0
   );
   const [errors, setErrors] = useState({});
+  const hasValidationErrors = Object.keys(errors).length > 0;
 
   // Reposiciona o estado quando muda a matriz ou entradas iniciais
   useEffect(() => {
     setTotalPerSize(sizeObj);
     setTotalUnits(Number(props.initialTotalUnits) || 0);
-    setErrors({});
+    setErrors(validateAll(sizeObj));
+    // validateAll é função local e depende das regras atuais da linha.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sizeObj, props.initialTotalUnits]);
 
   // Submete o formulário (delegado para o pai)
@@ -153,6 +150,9 @@ const PackingListForm = (props) => {
     const parsed = Number(trimmed);
     return Number.isNaN(parsed) ? 0 : parsed;
   };
+
+  const isNonNegativeInteger = (value) =>
+    Number.isInteger(value) && value >= 0;
 
   // Valida se o intervalo de caixas é consistente
   const isValidRange = (obj) => {
@@ -265,13 +265,34 @@ const PackingListForm = (props) => {
     rows.forEach((row) => {
       const key = row.rowId;
       const rowErrors = {};
+      if (!isNonNegativeInteger(row.boxFrom)) {
+        rowErrors.boxFrom = "Caixa De deve ser inteiro >= 0.";
+      }
+      if (!isNonNegativeInteger(row.boxTo)) {
+        rowErrors.boxTo = "Caixa Até deve ser inteiro >= 0.";
+      }
+      if (!isNonNegativeInteger(row.unitsPerBox)) {
+        rowErrors.unitsPerBox = "Quantidade p/ caixa deve ser inteiro >= 0.";
+      }
+      if (!isNonNegativeInteger(row.remainBox)) {
+        rowErrors.remainBox = "Caixa de Restos deve ser inteiro >= 0.";
+      }
+      if (!isNonNegativeInteger(row.remainUnits)) {
+        rowErrors.remainUnits = "Quantidade de restos deve ser inteiro >= 0.";
+      }
       if (row.boxFrom > 0 || row.boxTo > 0) {
+        if ((row.boxFrom > 0) !== (row.boxTo > 0)) {
+          rowErrors.boxFrom = "Preencha Caixa De e Caixa Até.";
+          rowErrors.boxTo = "Preencha Caixa De e Caixa Até.";
+        }
         if (!isValidRange(row)) {
-          rowErrors.boxRange = "Intervalo inválido (Caixa De/Até).";
+          rowErrors.boxFrom = "Intervalo inválido (Caixa De/Até).";
+          rowErrors.boxTo = "Intervalo inválido (Caixa De/Até).";
         }
       }
       if (isRangeOverlapping(row, rows)) {
-        rowErrors.boxRange = "Intervalo sobreposto com outro tamanho.";
+        rowErrors.boxFrom = "Intervalo sobreposto com outro tamanho.";
+        rowErrors.boxTo = "Intervalo sobreposto com outro tamanho.";
       }
       if (row.unitsPerBox <= 0 && isValidRange(row)) {
         rowErrors.unitsPerBox = "Quantidade por caixa obrigatória.";
@@ -314,6 +335,7 @@ const PackingListForm = (props) => {
       total += rowTotal;
       return { ...obj, totalPerSize: rowTotal };
     });
+    setErrors(validateAll(updatedObjects));
     setTotalUnits(total);
     setTotalPerSize(updatedObjects);
   };
@@ -321,13 +343,23 @@ const PackingListForm = (props) => {
   return (
     <Form className={`${styles["form-control"]}`} onSubmit={submitFormHandler}>
       <Card className={styles.tableCard}>
-          <Table striped bordered hover variant="dark" className={styles.table}>
+          <Table striped bordered hover className={styles.table}>
             <thead>
               <tr>
-                {(props.labelFieldDefs || []).map((field) => (
-                  <td key={`field_label_${field.fieldId}`}>{field.name}</td>
+                {(props.labelFieldDefs || []).map((field, index) => (
+                  <td
+                    key={`field_label_${field.fieldId}`}
+                    className={index === 0 ? styles.stickyCol : ""}
+                  >
+                    {field.name}
+                  </td>
                 ))}
-                <td key={"size_label"}>Size</td>
+                <td
+                  key={"size_label"}
+                  className={(props.labelFieldDefs || []).length === 0 ? styles.stickyCol : ""}
+                >
+                  Size
+                </td>
                 <td key={"box_from_label"}>Caixa "De"</td>
                 <td key={"box_to_label"}>Caixa "Até"</td>
                 <td key={"units_p_box_label"}>Quantidade p/ caixa</td>
@@ -338,13 +370,18 @@ const PackingListForm = (props) => {
             </thead>
             <tbody>
               {totalPerSize.map((size) => {
-                const rowValid = isRowValid(size, totalPerSize);
-                const inputClass = rowValid ? "" : styles.invalidInput;
                 const rowErrors = errors[size.rowId] || {};
+                const rowHasErrors = Object.keys(rowErrors).length > 0;
                 return (
-                <tr key={"tr_" + size.rowId}>
-                  {(props.labelFieldDefs || []).map((field) => (
-                    <td key={`${size.rowId}_${field.fieldId}`}>
+                <tr
+                  key={"tr_" + size.rowId}
+                  className={rowHasErrors ? styles.invalidRow : ""}
+                >
+                  {(props.labelFieldDefs || []).map((field, index) => (
+                    <td
+                      key={`${size.rowId}_${field.fieldId}`}
+                      className={index === 0 ? styles.stickyCol : ""}
+                    >
                       <Form.Select
                         size="sm"
                         className={`${styles.compactInput}`}
@@ -368,7 +405,9 @@ const PackingListForm = (props) => {
                       </Form.Select>
                     </td>
                   ))}
-                  <td>
+                  <td
+                    className={(props.labelFieldDefs || []).length === 0 ? styles.stickyCol : ""}
+                  >
                     <label id={"size_" + size.size} key={"size_" + size.size}>
                       {size.size}
                     </label>
@@ -380,12 +419,14 @@ const PackingListForm = (props) => {
                       onChange={(event) =>
                         boxFromChangeHandler(size.rowId, event.target.value)
                       }
-                      className={`${styles.compactInput} ${inputClass}`}
+                      className={`${styles.compactInput} ${
+                        rowErrors.boxFrom ? styles.invalidInput : ""
+                      }`}
                       value={size.boxFrom || ""}
                     />
-                    {rowErrors.boxRange ? (
+                    {rowErrors.boxFrom ? (
                       <div className={styles.errorText}>
-                        {rowErrors.boxRange}
+                        {rowErrors.boxFrom}
                       </div>
                     ) : null}
                   </td>
@@ -396,9 +437,16 @@ const PackingListForm = (props) => {
                       onChange={(event) =>
                         boxToChangeHandler(size.rowId, event.target.value)
                       }
-                      className={`${styles.compactInput} ${inputClass}`}
+                      className={`${styles.compactInput} ${
+                        rowErrors.boxTo ? styles.invalidInput : ""
+                      }`}
                       value={size.boxTo || ""}
                     />
+                    {rowErrors.boxTo ? (
+                      <div className={styles.errorText}>
+                        {rowErrors.boxTo}
+                      </div>
+                    ) : null}
                   </td>
                   <td>
                     <input
@@ -407,7 +455,9 @@ const PackingListForm = (props) => {
                       onChange={(event) =>
                         qtyPerBoxChangeHandler(size.rowId, event.target.value)
                       }
-                      className={`${styles.compactInput} ${inputClass}`}
+                      className={`${styles.compactInput} ${
+                        rowErrors.unitsPerBox ? styles.invalidInput : ""
+                      }`}
                       value={size.unitsPerBox || ""}
                     />
                     {rowErrors.unitsPerBox ? (
@@ -423,7 +473,9 @@ const PackingListForm = (props) => {
                       onChange={(event) =>
                         remainBoxChangeHandler(size.rowId, event.target.value)
                       }
-                      className={`${styles.compactInput} ${inputClass}`}
+                      className={`${styles.compactInput} ${
+                        rowErrors.remainBox ? styles.invalidInput : ""
+                      }`}
                       value={size.remainBox || ""}
                     />
                     {rowErrors.remainBox ? (
@@ -439,7 +491,9 @@ const PackingListForm = (props) => {
                       onChange={(event) =>
                         remainQtyChangeHandler(size.rowId, event.target.value)
                       }
-                      className={`${styles.compactInput} ${inputClass}`}
+                      className={`${styles.compactInput} ${
+                        rowErrors.remainUnits ? styles.invalidInput : ""
+                      }`}
                       value={size.remainUnits || ""}
                     />
                     {rowErrors.remainUnits ? (
@@ -458,8 +512,13 @@ const PackingListForm = (props) => {
                   </td>
                 </tr>
               )})}
-              <tr>
-                <td colSpan={6 + (props.labelFieldDefs || []).length}>Total</td>
+              <tr className={styles.totalRow}>
+                <td
+                  colSpan={6 + (props.labelFieldDefs || []).length}
+                  className={styles.totalLabel}
+                >
+                  Total
+                </td>
                 <td>{totalUnits}</td>
               </tr>
             </tbody>
@@ -468,7 +527,7 @@ const PackingListForm = (props) => {
       <Button
         variant="primary"
         type={"submit"}
-        disabled={props.isSubmitDisabled}
+        disabled={props.isSubmitDisabled || hasValidationErrors}
       >
         {props.submitLabel || "Gerar Packing"}
       </Button>

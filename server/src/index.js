@@ -6,7 +6,9 @@ import packingListsRouter from "./routes/packingLists.js";
 import clientsRouter from "./routes/clients.js";
 import sizeMatrixesRouter from "./routes/sizeMatrixes.js";
 import labelTemplatesRouter from "./routes/labelTemplates.js";
+import packingTemplatesRouter from "./routes/packingTemplates.js";
 import { ensureBaseLabelTemplates } from "./services/labelTemplateService.js";
+import { ensureBasePackingTemplates } from "./services/packingTemplateService.js";
 
 // Inicializa a app Express
 const app = express();
@@ -26,11 +28,13 @@ app.use("/api/packing-lists", packingListsRouter);
 app.use("/api/clients", clientsRouter);
 app.use("/api/size-matrixes", sizeMatrixesRouter);
 app.use("/api/label-templates", labelTemplatesRouter);
+app.use("/api/packing-templates", packingTemplatesRouter);
 
 mongoose
   .connect(mongoUrl)
   .then(async () => {
     await ensureBaseLabelTemplates();
+    await ensureBasePackingTemplates();
     // Só iniciamos o servidor depois da ligação ao Mongo
     app.listen(port, () => {
       console.log(`API listening on port ${port}`);

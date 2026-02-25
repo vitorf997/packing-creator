@@ -6,12 +6,17 @@ import {
 } from "../../../api/packingLists";
 import MessageModal from "../../Common/MessageModal";
 import { normalizeClientLabelFields, normalizeLabelItems } from "../../../utils/labelFields";
+import { Button, Card, Form } from "react-bootstrap";
+import { openPrintLabelsWindow } from "../PrintLabels/printUtils";
+import { openPrintPackingWindow } from "../PrintPacking/printPackingUtils";
 
-// Ecrã para atualizar packing lists existentes
+// Ecrã para atualizar Packings existentes
 const UpdatePackingList = (props) => {
   const [items, setItems] = useState([]);
   const [selectedId, setSelectedId] = useState(props.selectedId || "");
   const [selectedItem, setSelectedItem] = useState(null);
+  const [po, setPo] = useState("");
+  const [model, setModel] = useState("");
   // Estado do modal de feedback
   const [modal, setModal] = useState({
     show: false,
@@ -32,7 +37,7 @@ const UpdatePackingList = (props) => {
         setModal({
           show: true,
           title: "Erro",
-          message: "Erro ao carregar packing lists."
+          message: "Erro ao carregar Packings."
         });
       });
   }, []);
@@ -44,16 +49,29 @@ const UpdatePackingList = (props) => {
   }, [items, selectedId]);
 
   useEffect(() => {
+    setPo(selectedItem?.po || "");
+    setModel(selectedItem?.model || "");
+  }, [selectedItem]);
+
+  useEffect(() => {
     if (props.selectedId) setSelectedId(props.selectedId);
   }, [props.selectedId]);
 
-  // Submete alterações da packing list
+  // Submete alterações do Packing
   const submitHandler = (payload) => {
     if (!selectedItem?._id) return;
+    if (!po.trim()) {
+      setModal({
+        show: true,
+        title: "Dados inválidos",
+        message: "PO é obrigatório."
+      });
+      return;
+    }
     updatePackingList(selectedItem._id, {
       ...payload,
-      po: selectedItem.po,
-      model: selectedItem.model,
+      po: po.trim(),
+      model: model.trim(),
       clientId: selectedItem.clientId?._id || selectedItem.clientId,
       sizeMatrixId: selectedItem.sizeMatrixId?._id || selectedItem.sizeMatrixId,
       labelItems: normalizeLabelItems(
@@ -65,14 +83,14 @@ const UpdatePackingList = (props) => {
         setModal({
           show: true,
           title: "Sucesso",
-          message: "Packing list atualizada com sucesso."
+          message: "Packing atualizado com sucesso."
         });
       })
       .catch(() => {
         setModal({
           show: true,
           title: "Erro",
-          message: "Erro ao atualizar packing list."
+          message: "Erro ao atualizar o Packing."
         });
       });
   };
@@ -80,16 +98,35 @@ const UpdatePackingList = (props) => {
   const sizeMatrix = selectedItem?.sizeMatrix || props.data;
 
   return (
-    <div>
-      <h3>Atualizar Packing List</h3>
+    <Card className="pageSectionCard">
+      <div className="d-flex align-items-center justify-content-between gap-2 mb-3 flex-wrap">
+        <h3 className="mb-0">Atualizar Packing</h3>
+        <div className="d-flex gap-2">
+          <Button
+            size="sm"
+            variant="outline-dark"
+            disabled={!selectedItem}
+            onClick={() => selectedItem && openPrintLabelsWindow(selectedItem)}
+          >
+            Imprimir Rótulos
+          </Button>
+          <Button
+            size="sm"
+            variant="outline-secondary"
+            disabled={!selectedItem}
+            onClick={() => selectedItem && openPrintPackingWindow(selectedItem)}
+          >
+            Imprimir Packing
+          </Button>
+        </div>
+      </div>
       {!props.selectedId ? (
-        <div style={{ marginBottom: "16px" }}>
-          <label htmlFor="packingListSelect">Selecionar packing list: </label>
-          <select
+        <Form.Group className="mb-3">
+          <Form.Label htmlFor="packingListSelect">Selecionar Packing</Form.Label>
+          <Form.Select
             id="packingListSelect"
             value={selectedId}
             onChange={(event) => setSelectedId(event.target.value)}
-            style={{ marginLeft: "8px" }}
           >
             <option value="">-- selecione --</option>
             {items.map((item) => (
@@ -97,32 +134,59 @@ const UpdatePackingList = (props) => {
                 {item._id} ({new Date(item.createdAt).toLocaleString()})
               </option>
             ))}
-          </select>
-        </div>
+          </Form.Select>
+        </Form.Group>
       ) : null}
       {selectedItem ? (
-        <PackingListForm
-          data={sizeMatrix}
-          initialEntries={selectedItem.entries}
-          initialTotalUnits={selectedItem.totalUnits}
-          onSubmit={submitHandler}
-          onInvalid={() =>
-            setModal({
-              show: true,
-              title: "Dados inválidos",
-              message:
-                "Existem linhas inválidas. Verifique as caixas sobrepostas ou campos obrigatórios."
-            })
-          }
-          submitLabel="Atualizar Packing"
-          labelFieldDefs={normalizeClientLabelFields(selectedItem.clientId?.labelFields)}
-          labelItems={normalizeLabelItems(
-            selectedItem.labelItems,
-            normalizeClientLabelFields(selectedItem.clientId?.labelFields)
-          )}
-        />
+        <>
+          <div className="row g-3 mb-3">
+            <div className="col-md-6">
+              <Form.Label>PO</Form.Label>
+              <Form.Control
+                value={po}
+                onChange={(event) => setPo(event.target.value)}
+                placeholder="Pedido Original"
+                isInvalid={!po.trim()}
+              />
+              {!po.trim() ? (
+                <Form.Control.Feedback type="invalid">
+                  PO é obrigatório.
+                </Form.Control.Feedback>
+              ) : null}
+            </div>
+            <div className="col-md-6">
+              <Form.Label>Modelo</Form.Label>
+              <Form.Control
+                value={model}
+                onChange={(event) => setModel(event.target.value)}
+                placeholder="Modelo"
+              />
+            </div>
+          </div>
+          <PackingListForm
+            data={sizeMatrix}
+            initialEntries={selectedItem.entries}
+            initialTotalUnits={selectedItem.totalUnits}
+            onSubmit={submitHandler}
+            onInvalid={() =>
+              setModal({
+                show: true,
+                title: "Dados inválidos",
+                message:
+                  "Existem linhas inválidas. Verifique as caixas sobrepostas ou campos obrigatórios."
+              })
+            }
+            submitLabel="Atualizar Packing"
+            isSubmitDisabled={!po.trim()}
+            labelFieldDefs={normalizeClientLabelFields(selectedItem.clientId?.labelFields)}
+            labelItems={normalizeLabelItems(
+              selectedItem.labelItems,
+              normalizeClientLabelFields(selectedItem.clientId?.labelFields)
+            )}
+          />
+        </>
       ) : (
-        <p>Escolhe uma packing list para editar.</p>
+        <p>Escolhe um Packing para editar.</p>
       )}
       <MessageModal
         show={modal.show}
@@ -130,7 +194,7 @@ const UpdatePackingList = (props) => {
         message={modal.message}
         onClose={closeModal}
       />
-    </div>
+    </Card>
   );
 };
 

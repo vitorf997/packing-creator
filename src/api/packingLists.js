@@ -1,19 +1,19 @@
-// Vai buscar a lista de packing lists
+// Vai buscar a lista de Packings
 export const fetchPackingLists = async (params = {}) => {
   const query = new URLSearchParams(params).toString();
   const res = await fetch(`/api/packing-lists${query ? `?${query}` : ""}`);
-  if (!res.ok) throw new Error("Falha ao carregar packing lists");
+  if (!res.ok) throw new Error("Falha ao carregar Packings");
   return res.json();
 };
 
-// Vai buscar uma packing list por id
+// Vai buscar um Packing por id
 export const fetchPackingListById = async (id) => {
   const res = await fetch(`/api/packing-lists/${id}`);
-  if (!res.ok) throw new Error("Packing list não encontrada");
+  if (!res.ok) throw new Error("Packing não encontrado");
   return res.json();
 };
 
-// Cria uma packing list
+// Cria um Packing
 export const createPackingList = async (payload) => {
   const res = await fetch("/api/packing-lists", {
     method: "POST",
@@ -24,7 +24,7 @@ export const createPackingList = async (payload) => {
   return res.json();
 };
 
-// Atualiza uma packing list por id
+// Atualiza um Packing por id
 export const updatePackingList = async (id, payload) => {
   const res = await fetch(`/api/packing-lists/${id}`, {
     method: "PUT",
@@ -35,7 +35,7 @@ export const updatePackingList = async (id, payload) => {
   return res.json();
 };
 
-// Remove uma packing list por id
+// Remove um Packing por id
 export const deletePackingList = async (id) => {
   const res = await fetch(`/api/packing-lists/${id}`, {
     method: "DELETE"

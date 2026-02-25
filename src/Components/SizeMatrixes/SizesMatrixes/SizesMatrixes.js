@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Form, Table } from "react-bootstrap";
+import { Button, Card, Form, Table } from "react-bootstrap";
 import {
   deleteSizeMatrix,
   fetchSizeMatrixes
@@ -69,14 +69,16 @@ const SizesMatrixes = ({ onNavigate }) => {
   };
 
   return (
-    <div>
-      <h3>Matrizes de Tamanhos</h3>
-      <div style={{ display: "flex", gap: "12px", marginBottom: "12px" }}>
+    <Card className="pageSectionCard">
+      <div className="pageHeaderRow">
+        <h3 className="mb-0">Matrizes de Tamanhos</h3>
+      </div>
+      <div className="pageFilters">
         <Form.Control
+          className="filterInputSm"
           placeholder="Pesquisar por nome ou tamanhos..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ maxWidth: "320px" }}
         />
         <Button
           onClick={() => loadItems(search.trim())}
@@ -87,9 +89,9 @@ const SizesMatrixes = ({ onNavigate }) => {
         </Button>
       </div>
       {items.length === 0 ? (
-        <p style={{ marginTop: "12px" }}>Sem resultados.</p>
+        <p className="mutedEmpty">Sem resultados.</p>
       ) : (
-        <Table striped bordered hover responsive style={{ marginTop: "12px" }}>
+        <Table striped bordered hover responsive className="mb-0">
           <thead className="table-dark">
             <tr>
               <th>Nome</th>
@@ -105,6 +107,7 @@ const SizesMatrixes = ({ onNavigate }) => {
                 <td>{item.sizes.join(", ")}</td>
                 <td>{new Date(item.createdAt).toLocaleString()}</td>
                 <td>
+                  <div className="actionsCell">
                   <Button
                     size="sm"
                     variant="outline-primary"
@@ -114,7 +117,6 @@ const SizesMatrixes = ({ onNavigate }) => {
                         backKey: "size_list"
                       })
                     }
-                    style={{ marginRight: "8px" }}
                   >
                     Editar
                   </Button>
@@ -125,6 +127,7 @@ const SizesMatrixes = ({ onNavigate }) => {
                   >
                     Remover
                   </Button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -144,7 +147,7 @@ const SizesMatrixes = ({ onNavigate }) => {
         message={modal.message}
         onClose={closeModal}
       />
-    </div>
+    </Card>
   );
 };
 

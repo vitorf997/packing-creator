@@ -1,17 +1,20 @@
 import React, { useEffect, useMemo, useState } from "react";
 import PackingListForm from "./PackingListForm";
-import { createPackingList } from "../../../api/packingLists";
+import { createPackingList, fetchPackingListById } from "../../../api/packingLists";
 import { fetchClients } from "../../../api/clients";
 import { fetchSizeMatrixes } from "../../../api/sizeMatrixes";
 import { Card, Col, Form, Row } from "react-bootstrap";
 import MessageModal from "../../Common/MessageModal";
+import styles from "./CreatePackingList.module.css";
 import {
   createLabelItem,
   normalizeClientLabelFields,
   normalizeLabelItems
 } from "../../../utils/labelFields";
+import { openPrintLabelsWindow } from "../PrintLabels/printUtils";
+import { openPrintPackingWindow } from "../PrintPacking/printPackingUtils";
 
-// Ecrã para criar uma nova packing list
+// Ecrã para criar um novo Packing
 const CreatePackingList = (props) => {
   // Estado do modal de feedback
   const [modal, setModal] = useState({
@@ -24,12 +27,17 @@ const CreatePackingList = (props) => {
   const [selectedSizes, setSelectedSizes] = useState(props.data);
   const [clients, setClients] = useState([]);
   const [selectedClientId, setSelectedClientId] = useState("");
+  const [po, setPo] = useState("");
+  const [model, setModel] = useState("");
   const [labelItems, setLabelItems] = useState([]);
   const [tableLabelItems, setTableLabelItems] = useState([]);
   const [labelItemsDirty, setLabelItemsDirty] = useState(false);
+  const [lastCreatedPackingId, setLastCreatedPackingId] = useState("");
+  const [printingLastCreated, setPrintingLastCreated] = useState(false);
   const [touched, setTouched] = useState({
     clientId: false,
-    sizeMatrixId: false
+    sizeMatrixId: false,
+    po: false
   });
   const selectedClient = useMemo(
     () => clients.find((client) => client._id === selectedClientId) || null,
@@ -91,8 +99,9 @@ const CreatePackingList = (props) => {
       }
       const baseItems =
         normalized.length > 0 ? normalized : [createLabelItem(clientLabelFields, 0)];
-      setTableLabelItems(baseItems);
-      setLabelItemsDirty(false);
+      // Exige ação explícita em "Atualizar Tabela" para concluir o passo de referências.
+      setTableLabelItems([]);
+      setLabelItemsDirty(true);
       return baseItems;
     });
   }, [clientLabelFields]);
@@ -104,28 +113,33 @@ const CreatePackingList = (props) => {
 
   // Submete o formulário e grava via API
   const submitHandler = (payload) => {
-    if (!selectedClientId || !selectedMatrixId) {
+    if (!po.trim() || !selectedClientId || !selectedMatrixId) {
       setModal({
         show: true,
         title: "Dados inválidos",
-        message: "Cliente e Matriz são obrigatórios."
+        message: "PO, Cliente e Matriz são obrigatórios."
       });
       return;
     }
     createPackingList({
       ...payload,
+      po: po.trim(),
+      model: model.trim(),
       sizeMatrixId: selectedMatrixId,
       clientId: selectedClientId,
       labelItems: normalizeLabelItems(tableLabelItems, clientLabelFields)
     })
-      .then(() => {
+      .then((created) => {
+        setLastCreatedPackingId(created?._id || "");
         setModal({
           show: true,
           title: "Sucesso",
-          message: "Packing list gravada com sucesso."
+          message: "Packing gravado com sucesso."
         });
         setSelectedClientId("");
         setSelectedMatrixId("");
+        setPo("");
+        setModel("");
         setLabelItems([]);
         setTableLabelItems([]);
         setLabelItemsDirty(false);
@@ -134,21 +148,89 @@ const CreatePackingList = (props) => {
         setModal({
           show: true,
           title: "Erro",
-          message: "Erro ao gravar packing list."
+          message: "Erro ao gravar o Packing."
         });
       });
   };
 
+  const printLastCreatedLabelsHandler = async () => {
+    if (!lastCreatedPackingId) return;
+    setPrintingLastCreated(true);
+    try {
+      const packing = await fetchPackingListById(lastCreatedPackingId);
+      await openPrintLabelsWindow(packing);
+    } catch (error) {
+      setModal({
+        show: true,
+        title: "Erro",
+        message: "Não foi possível imprimir o Packing."
+      });
+    } finally {
+      setPrintingLastCreated(false);
+    }
+  };
+
+  const printLastCreatedPackingHandler = async () => {
+    if (!lastCreatedPackingId) return;
+    setPrintingLastCreated(true);
+    try {
+      const packing = await fetchPackingListById(lastCreatedPackingId);
+      await openPrintPackingWindow(packing);
+    } catch (error) {
+      setModal({
+        show: true,
+        title: "Erro",
+        message: "Não foi possível imprimir o packing."
+      });
+    } finally {
+      setPrintingLastCreated(false);
+    }
+  };
+
   const canSubmit =
+    po.trim() &&
     selectedClientId &&
     selectedMatrixId &&
     (!clientLabelFields.length || !labelItemsDirty);
-  const showErrors = !canSubmit && (touched.clientId || touched.sizeMatrixId);
+  const showErrors = !canSubmit && (touched.clientId || touched.sizeMatrixId || touched.po);
+  const baseReady = Boolean(po.trim() && selectedClientId && selectedMatrixId);
+  const refsReady = Boolean(
+    baseReady &&
+      (!clientLabelFields.length || (!labelItemsDirty && tableLabelItems.length > 0))
+  );
+  const currentStep = !baseReady ? 1 : !refsReady ? 2 : 3;
 
   return (
-    <div>
-      <Card style={{ padding: "16px", marginBottom: "16px" }}>
-        <h3>Dados da Packing List</h3>
+    <div className={styles.page}>
+      <Card className={styles.stepCard}>
+        <div className={styles.stepper}>
+          <div
+            className={`${styles.step} ${
+              baseReady ? styles.stepDone : currentStep === 1 ? styles.stepActive : ""
+            }`}
+          >
+            <span className={styles.stepIndex}>1</span>
+            <span>Dados base</span>
+          </div>
+          <div
+            className={`${styles.step} ${
+              refsReady ? styles.stepDone : currentStep === 2 ? styles.stepActive : ""
+            }`}
+          >
+            <span className={styles.stepIndex}>2</span>
+            <span>Referências</span>
+          </div>
+          <div
+            className={`${styles.step} ${currentStep === 3 ? styles.stepActive : ""}`}
+          >
+            <span className={styles.stepIndex}>3</span>
+            <span>Tabela</span>
+          </div>
+        </div>
+      </Card>
+
+      <Card className={styles.sectionCard}>
+        <h3 className={styles.sectionTitle}>Dados da Packing List</h3>
         <Form>
           <Row className="mb-3">
             <Form.Group as={Col} md={12} controlId="clientSelect">
@@ -178,6 +260,31 @@ const CreatePackingList = (props) => {
               Seleciona primeiro o cliente para carregar os campos do rótulo.
             </div>
           ) : null}
+          <Row className="mb-3">
+            <Form.Group as={Col} md={6} controlId="poInput">
+              <Form.Label>PO</Form.Label>
+              <Form.Control
+                value={po}
+                onChange={(e) => setPo(e.target.value)}
+                onBlur={() =>
+                  setTouched((prev) => ({ ...prev, po: true }))
+                }
+                isInvalid={touched.po && !po.trim()}
+                placeholder="Pedido Original"
+              />
+              <Form.Control.Feedback type="invalid">
+                PO é obrigatório.
+              </Form.Control.Feedback>
+            </Form.Group>
+            <Form.Group as={Col} md={6} controlId="modelInput">
+              <Form.Label>Modelo</Form.Label>
+              <Form.Control
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                placeholder="Modelo"
+              />
+            </Form.Group>
+          </Row>
           <Row className="mb-3">
             <Form.Group as={Col} md={6} controlId="sizeMatrixSelect">
               <Form.Label>Matriz de tamanhos</Form.Label>
@@ -298,22 +405,48 @@ const CreatePackingList = (props) => {
           ) : null}
         </Form>
       </Card>
-      <PackingListForm
-        data={selectedSizes}
-        onSubmit={submitHandler}
-        onInvalid={() =>
-          setModal({
-            show: true,
-            title: "Dados inválidos",
-            message:
-              "Existem linhas inválidas. Verifique as caixas sobrepostas ou campos obrigatórios."
-          })
-        }
-        submitLabel="Gravar Packing"
-        isSubmitDisabled={!canSubmit}
-        labelFieldDefs={clientLabelFields}
-        labelItems={tableLabelItems}
-      />
+      <Card className={styles.sectionCard}>
+        <h3 className={styles.sectionTitle}>Tabela de Packing</h3>
+        <PackingListForm
+          data={selectedSizes}
+          onSubmit={submitHandler}
+          onInvalid={() =>
+            setModal({
+              show: true,
+              title: "Dados inválidos",
+              message:
+                "Existem linhas inválidas. Verifique as caixas sobrepostas ou campos obrigatórios."
+            })
+          }
+          submitLabel="Gravar Packing"
+          isSubmitDisabled={!canSubmit}
+          labelFieldDefs={clientLabelFields}
+          labelItems={tableLabelItems}
+        />
+        <div className="mt-3 d-flex align-items-center gap-2 flex-wrap">
+          {lastCreatedPackingId ? (
+            <span className="text-muted">Último Packing gravado: {lastCreatedPackingId}</span>
+          ) : (
+            <span className="text-muted">Grava o Packing para desbloquear a impressão.</span>
+          )}
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-sm"
+            onClick={printLastCreatedPackingHandler}
+            disabled={!lastCreatedPackingId || printingLastCreated}
+          >
+            {printingLastCreated ? "A preparar..." : "Imprimir Packing"}
+          </button>
+          <button
+            type="button"
+            className="btn btn-outline-dark btn-sm"
+            onClick={printLastCreatedLabelsHandler}
+            disabled={!lastCreatedPackingId || printingLastCreated}
+          >
+            {printingLastCreated ? "A preparar..." : "Imprimir Rótulos"}
+          </button>
+        </div>
+      </Card>
       <MessageModal
         show={modal.show}
         title={modal.title}

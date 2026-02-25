@@ -168,8 +168,8 @@ const LabelTemplates = () => {
   };
 
   return (
-    <Card style={{ padding: "16px" }}>
-      <h3>Layouts de Etiqueta</h3>
+    <Card className="pageSectionCard">
+      <h3 className="mb-3">Layout Rótulos</h3>
       <div
         style={{
           display: "grid",
@@ -179,7 +179,7 @@ const LabelTemplates = () => {
         }}
       >
         <div>
-          <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
+          <div className="pageFilters">
             <Form.Control
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -204,11 +204,9 @@ const LabelTemplates = () => {
                 <tr
                   key={item._id}
                   onClick={() => setSelectedId(item._id)}
-                  style={{
-                    cursor: "pointer",
-                    backgroundColor:
-                      selectedId === item._id ? "rgba(13,110,253,.08)" : "inherit"
-                  }}
+                  className={`tableSelectableRow ${
+                    selectedId === item._id ? "isSelected" : ""
+                  }`}
                 >
                   <td>{item.name}</td>
                   <td>{item.key}</td>

@@ -57,8 +57,8 @@ const CreateSizeMatrix = () => {
   };
 
   return (
-    <Card style={{ padding: "16px" }}>
-      <h3>Criar Matriz de Tamanhos</h3>
+    <Card className="pageSectionCard">
+      <h3 className="mb-3">Criar Matriz de Tamanhos</h3>
       <Form onSubmit={onSubmit}>
         <Form.Group className="mb-3">
           <Form.Label>Nome</Form.Label>

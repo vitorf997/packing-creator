@@ -15,6 +15,9 @@
   --sidebar-hover-bg: #edf3ff;
   --sidebar-active-bg: linear-gradient(90deg, #1f6feb 0%, #2f81f7 100%);
   --sidebar-active-text: #ffffff;
+  --danger: #b00020;
+  --danger-soft: rgba(176, 0, 32, 0.08);
+  --header-bg: rgba(255, 255, 255, 0.88);
 }
 
 .appRoot[data-theme="dark"] {
@@ -34,6 +37,9 @@
   --sidebar-hover-bg: rgba(255, 255, 255, 0.06);
   --sidebar-active-bg: linear-gradient(90deg, #1f6feb 0%, #2f81f7 100%);
   --sidebar-active-text: #ffffff;
+  --danger: #ff6b7f;
+  --danger-soft: rgba(255, 107, 127, 0.15);
+  --header-bg: rgba(15, 19, 25, 0.9);
 }
 
 body[data-theme="light"],
@@ -54,14 +60,95 @@ body[data-theme="dark"] {
 }
 
 .appTopBar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 18px 0;
+  padding: 10px 18px;
+  background: var(--header-bg);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--surface-border);
 }
 
 .appContent {
-  padding: 10px 8px 14px;
+  padding: 14px 12px 16px;
+}
+
+.contentShell {
+  max-width: 1600px;
+}
+
+.pageSectionCard {
+  padding: 14px;
+  border-radius: 12px;
+}
+
+.pageHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.pageFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.filterInputSm {
+  max-width: 320px;
+}
+
+.filterSelectSm {
+  max-width: 220px;
+}
+
+.actionsCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mutedEmpty {
+  margin-top: 12px;
+  color: var(--text-secondary);
+}
+
+.tableSelectableRow {
+  cursor: pointer;
+}
+
+.tableSelectableRow.isSelected > * {
+  background: rgba(13, 110, 253, 0.12) !important;
+}
+
+.topBarLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topBarActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.viewTitleBlock {
+  min-width: 220px;
+}
+
+.viewTitle {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 .themeToggleBtn {
@@ -123,6 +210,27 @@ body[data-theme="dark"] {
   border-color: var(--surface-border);
 }
 
+.appRoot .form-label {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.appRoot .btn {
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.appRoot .btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.appRoot .btn-outline-primary {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .appRoot .form-control::placeholder {
   color: var(--text-secondary);
 }
@@ -161,4 +269,22 @@ body[data-theme="dark"] {
 .appRoot[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(even) > * {
   color: var(--text-primary);
   background-color: #18202b;
+}
+
+@media (max-width: 991px) {
+  .appTopBar {
+    padding: 10px 12px;
+  }
+
+  .viewTitle {
+    font-size: 1rem;
+  }
+
+  .viewTitleBlock {
+    min-width: 0;
+  }
+
+  .topBarLeft {
+    gap: 8px;
+  }
 }

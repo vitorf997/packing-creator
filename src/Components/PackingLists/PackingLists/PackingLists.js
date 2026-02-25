@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Button, Form, Table } from "react-bootstrap";
+import { Button, Card, Form, Table } from "react-bootstrap";
 import { deletePackingList, fetchPackingLists } from "../../../api/packingLists";
 import ConfirmModal from "../../Common/ConfirmModal";
 import MessageModal from "../../Common/MessageModal";
 import { fetchClients } from "../../../api/clients";
 import { fetchSizeMatrixes } from "../../../api/sizeMatrixes";
 import { openPrintLabelsWindow } from "../PrintLabels/printUtils";
+import { openPrintPackingWindow } from "../PrintPacking/printPackingUtils";
 
-// Listagem de packing lists
+// Listagem de Packings
 const PackingLists = ({ onNavigate }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -39,7 +40,7 @@ const PackingLists = ({ onNavigate }) => {
         setModal({
           show: true,
           title: "Erro",
-          message: "Erro ao carregar packing lists."
+          message: "Erro ao carregar Packings."
         });
       })
       .finally(() => setLoading(false));
@@ -76,25 +77,27 @@ const PackingLists = ({ onNavigate }) => {
         setModal({
           show: true,
           title: "Erro",
-          message: "Erro ao remover packing list."
+          message: "Erro ao remover o Packing."
         });
       });
   };
 
   return (
-    <div>
-      <h3>Packing Lists</h3>
-      <div style={{ display: "flex", gap: "12px", marginBottom: "12px" }}>
+    <Card className="pageSectionCard">
+      <div className="pageHeaderRow">
+        <h3 className="mb-0">Packings</h3>
+      </div>
+      <div className="pageFilters">
         <Form.Control
+          className="filterInputSm"
           placeholder="Pesquisar por cliente/notas..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ maxWidth: "320px" }}
         />
         <Form.Select
+          className="filterSelectSm"
           value={filterClientId}
           onChange={(e) => setFilterClientId(e.target.value)}
-          style={{ maxWidth: "220px" }}
         >
           <option value="">Cliente: todos</option>
           {clients.map((c) => (
@@ -104,9 +107,9 @@ const PackingLists = ({ onNavigate }) => {
           ))}
         </Form.Select>
         <Form.Select
+          className="filterSelectSm"
           value={filterMatrixId}
           onChange={(e) => setFilterMatrixId(e.target.value)}
-          style={{ maxWidth: "220px" }}
         >
           <option value="">Matriz: todas</option>
           {matrixes.map((m) => (
@@ -124,9 +127,9 @@ const PackingLists = ({ onNavigate }) => {
         </Button>
       </div>
       {items.length === 0 ? (
-        <p style={{ marginTop: "12px" }}>Sem resultados.</p>
+        <p className="mutedEmpty">Sem resultados.</p>
       ) : (
-        <Table striped bordered hover responsive style={{ marginTop: "12px" }}>
+        <Table striped bordered hover responsive className="mb-0">
           <thead className="table-dark">
             <tr>
               <th>ID</th>
@@ -148,6 +151,7 @@ const PackingLists = ({ onNavigate }) => {
                 <td>{new Date(item.createdAt).toLocaleString()}</td>
                 <td>{item.notes || "-"}</td>
                 <td>
+                  <div className="actionsCell">
                   <Button
                     size="sm"
                     variant="outline-primary"
@@ -157,7 +161,6 @@ const PackingLists = ({ onNavigate }) => {
                         backKey: "packing_list"
                       })
                     }
-                    style={{ marginRight: "8px" }}
                   >
                     Editar
                   </Button>
@@ -165,9 +168,15 @@ const PackingLists = ({ onNavigate }) => {
                     size="sm"
                     variant="outline-dark"
                     onClick={() => openPrintLabelsWindow(item)}
-                    style={{ marginRight: "8px" }}
                   >
-                    Imprimir
+                    Imprimir Rótulos
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline-secondary"
+                    onClick={() => openPrintPackingWindow(item)}
+                  >
+                    Imprimir Packing
                   </Button>
                   <Button
                     size="sm"
@@ -176,6 +185,7 @@ const PackingLists = ({ onNavigate }) => {
                   >
                     Remover
                   </Button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -184,7 +194,7 @@ const PackingLists = ({ onNavigate }) => {
       )}
       <ConfirmModal
         show={confirm.show}
-        title="Remover packing list"
+        title="Remover Packing"
         message="Tem a certeza que quer remover?"
         onCancel={() => setConfirm({ show: false, id: "" })}
         onConfirm={confirmDelete}
@@ -195,7 +205,7 @@ const PackingLists = ({ onNavigate }) => {
         message={modal.message}
         onClose={closeModal}
       />
-    </div>
+    </Card>
   );
 };
 
